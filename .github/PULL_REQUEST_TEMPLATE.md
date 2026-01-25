@@ -2,20 +2,22 @@
 ## 요구사항
 
 ### 기본
-- [x] 기본 항목 1
-- [ ] 기본 항목 2
-
+- [x] 서비스 인터페이스 설계
+- [x] JCF*Service 구현
+- [x] File*Service 구현
+- [x] Repository 인터페이스 설계 (UserRepository, ChannelRepository, MessageRepository)
+- [x] JCF*Repository 구현
+- [x] File*Repository 구현 
 ### 심화
-- [ ] 심화 항목 1
-- [ ] 심화 항목 2
+- [x] 1차 심화 항목
+- [x] 2차 심화 항목
 
 ## 주요 변경사항
 - 
 - 
 
 ## 스크린샷
-![image](이미지url)
 
 ## 멘토에게
-- 셀프 코드 리뷰를 통해 질문 이어가겠습니다.
+- 
 - 
