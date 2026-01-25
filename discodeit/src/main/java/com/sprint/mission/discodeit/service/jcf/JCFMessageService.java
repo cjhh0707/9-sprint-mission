@@ -1,4 +1,103 @@
 package com.sprint.mission.discodeit.service.jcf;
 
-public class JCFMessageService {
+import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.service.ChannelService;
+import com.sprint.mission.discodeit.service.MessageService;
+import com.sprint.mission.discodeit.service.UserService;
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class JCFMessageService implements MessageService {
+    private final Map<UUID, Message> data;
+    private final UserService userService;
+    private final ChannelService channelService;
+
+    public JCFMessageService(UserService userService, ChannelService channelService) {
+        this.data = new HashMap<>();
+        this.userService = userService;
+        this.channelService = channelService;
+
+    }
+
+    @Override
+    public Message create(String content, UUID authorId, UUID channelId) {
+        //검증
+        //사용자가 존재하는지 확인
+        if (userService.findById(authorId) == null) {
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다. 다시 확인해주세요");
+        }
+
+        //채널이 존재하는지 확인
+        if (channelService.findById(channelId) == null) {
+            throw new IllegalArgumentException("존재하지 않는 채널입니다. 다시 확인해주세요.");
+        }
+
+        //메시지 생성
+        Message message = new Message(content, authorId, channelId);
+        data.put(message.getId(), message);
+        return message;
+    }
+
+    @Override
+    public Message findById(UUID id) {
+        return data.get(id);
+    }
+
+    @Override
+    public List<Message> findAll() {
+        return new ArrayList<>(data.values());
+    }
+
+    @Override
+    public List<Message> findByAuthorId(UUID authorId) {
+        return data.values().stream()
+                .filter(message -> message.getAuthorId().equals(authorId))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Message> findByChannelId(UUID channelId) {
+        return data.values().stream()
+                .filter(message -> message.getChannelId().equals(channelId))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Message update(UUID id, String content) {
+        Message message = data.get(id);
+        if (message == null) {
+            return null;
+        }
+        message.update(content);
+        return message;
+    }
+
+    @Override
+    public void delete(UUID id) {
+        data.remove(id);
+    }
+
+    @Override
+    public int deleteByAuthorId(UUID authorId) {
+        List<UUID> messageIdsToDelete = data.values().stream()
+                .filter(message -> message.getAuthorId().equals(authorId))
+                .map(Message::getId)
+                .collect(Collectors.toList());
+
+        messageIdsToDelete.forEach(data::remove);
+
+        return messageIdsToDelete.size();
+    }
+
+    @Override
+    public int deleteByChannelId(UUID channelId) {
+        List<UUID> messageIdsToDelete = data.values().stream()
+                .filter(message -> message.getChannelId().equals(channelId))
+                .map(Message::getId)
+                .collect(Collectors.toList());
+
+        messageIdsToDelete.forEach(data::remove);
+
+        return messageIdsToDelete.size();
+    }
 }
