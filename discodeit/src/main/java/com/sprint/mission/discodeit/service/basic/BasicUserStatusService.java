@@ -2,7 +2,6 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.request.UserStatusCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserStatusUpdateRequest;
-import com.sprint.mission.discodeit.dto.response.UserStatusResponse;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
@@ -12,75 +11,70 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-@Service
 @RequiredArgsConstructor
+@Service
 public class BasicUserStatusService implements UserStatusService {
     private final UserStatusRepository userStatusRepository;
     private final UserRepository userRepository;
 
     @Override
-    public UserStatusResponse create(UserStatusCreateRequest request) {
-        if (userRepository.findById(request.getUserId()) == null) {
-            throw new IllegalArgumentException("User not found");
+    public UserStatus create(UserStatusCreateRequest request) {
+        UUID userId = request.userId();
+
+        if (!userRepository.existsById(userId)) {
+            throw new NoSuchElementException("User with id " + userId + " does not exist");
+        }
+        if (userStatusRepository.findByUserId(userId).isPresent()) {
+            throw new IllegalArgumentException("UserStatus with id " + userId + " already exists");
         }
 
-        UserStatus existing = userStatusRepository.findByUserId(request.getUserId());
-        if (existing != null) {
-            throw new IllegalArgumentException("already exists");
-        }
-
-        UserStatus userStatus = new UserStatus(request.getUserId());
-
-        userStatusRepository.save(userStatus);
-
-        return new UserStatusResponse(userStatus);
+        Instant lastActiveAt = request.lastActiveAt();
+        UserStatus userStatus = new UserStatus(userId, lastActiveAt);
+        return userStatusRepository.save(userStatus);
     }
 
     @Override
-    public UserStatusResponse findById(UUID id) {
-        UserStatus userStatus = userStatusRepository.findByUserId(id);
-        if (userStatus == null) {
-            return null;
+    public UserStatus find(UUID userStatusId) {
+        return userStatusRepository.findById(userStatusId)
+                .orElseThrow(() -> new NoSuchElementException("UserStatus with id " + userStatusId + " not found"));
+    }
+
+    @Override
+    public List<UserStatus> findAll() {
+        return userStatusRepository.findAll().stream()
+                .toList();
+    }
+
+    @Override
+    public UserStatus update(UUID userStatusId, UserStatusUpdateRequest request) {
+        Instant newLastActiveAt = request.newLastActiveAt();
+
+        UserStatus userStatus = userStatusRepository.findById(userStatusId)
+                .orElseThrow(() -> new NoSuchElementException("UserStatus with id " + userStatusId + " not found"));
+        userStatus.update(newLastActiveAt);
+
+        return userStatusRepository.save(userStatus);
+    }
+
+    @Override
+    public UserStatus updateByUserId(UUID userId, UserStatusUpdateRequest request) {
+        Instant newLastActiveAt = request.newLastActiveAt();
+
+        UserStatus userStatus = userStatusRepository.findByUserId(userId)
+                .orElseThrow(() -> new NoSuchElementException("UserStatus with userId " + userId + " not found"));
+        userStatus.update(newLastActiveAt);
+
+        return userStatusRepository.save(userStatus);
+    }
+
+    @Override
+    public void delete(UUID userStatusId) {
+        if (!userStatusRepository.existsById(userStatusId)) {
+            throw new NoSuchElementException("UserStatus with id " + userStatusId + " not found");
         }
-        return new UserStatusResponse(userStatus);
-    }
-
-    @Override
-    public List<UserStatusResponse> findAll() {
-        return userStatusRepository.findAll().stream().map(UserStatusResponse::new).collect(Collectors.toList());
-    }
-
-    @Override
-    public UserStatusResponse update(UserStatusUpdateRequest request) {
-        UserStatus userStatus = userStatusRepository.findByUserId(request.getUserStatusId());
-        if (userStatus == null) {
-            return null;
-        }
-
-        userStatus.updateLastLogin(request.getLastLogin());
-        userStatusRepository.save(userStatus);
-
-        return new UserStatusResponse(userStatus);
-    }
-
-    @Override
-    public UserStatusResponse updateByUserId(UUID userId, Instant lastLogin) {
-        UserStatus userStatus = userStatusRepository.findByUserId(userId);
-        if (userStatus == null) {
-            return null;
-        }
-
-        userStatus.updateLastLogin(lastLogin);
-        userStatusRepository.save(userStatus);
-
-        return new UserStatusResponse(userStatus);
-    }
-
-    @Override
-    public void delete(UUID id) {
-        userRepository.delete(id);
+        userStatusRepository.deleteById(userStatusId);
     }
 }
