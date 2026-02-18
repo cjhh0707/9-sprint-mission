@@ -2,40 +2,43 @@ package com.sprint.mission.discodeit.entity;
 
 import lombok.Getter;
 
+import java.io.Serializable;
+import java.time.Instant;
+import java.util.UUID;
+
 @Getter
-public class Channel extends BaseEntity {
-    private String channelName;
-    private String description;
+public class Channel implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private UUID id;
+    private Instant createdAt;
+    private Instant updatedAt;
+    //
     private ChannelType type;
+    private String name;
+    private String description;
 
-    public Channel(String channelName, String description) {
-        super();
-        this.channelName = channelName;
-        this.description = description;
-        this.type = ChannelType.PUBLIC; //기본 Public으로
-    }
-
-    public Channel(ChannelType type) {
-        super();
+    public Channel(ChannelType type, String name, String description) {
+        this.id = UUID.randomUUID();
+        this.createdAt = Instant.now();
+        //
         this.type = type;
-        this.channelName = null;
-        this.description = null;
+        this.name = name;
+        this.description = description;
     }
 
-//    public String getChannelName() {
-//        return channelName;
-//    }
-//
-//    public String getDescription() {
-//        return description;
-//    }
-
-    public void update(String channelName, String description) {
-        if (this.type == ChannelType.PRIVATE) {
-            throw new IllegalArgumentException("Private channels cannot be updated");
+    public void update(String newName, String newDescription) {
+        boolean anyValueUpdated = false;
+        if (newName != null && !newName.equals(this.name)) {
+            this.name = newName;
+            anyValueUpdated = true;
         }
-        this.channelName = channelName;
-        this.description = description;
-        setUpdatedAt();
+        if (newDescription != null && !newDescription.equals(this.description)) {
+            this.description = newDescription;
+            anyValueUpdated = true;
+        }
+
+        if (anyValueUpdated) {
+            this.updatedAt = Instant.now();
+        }
     }
 }

@@ -2,33 +2,44 @@ package com.sprint.mission.discodeit.entity;
 
 import lombok.Getter;
 
+import java.io.Serializable;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
 @Getter
-public class UserStatus extends BaseEntity {
-    private final UUID userId;
-    private Instant lastLogin;
+public class UserStatus implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private UUID id;
+    private Instant createdAt;
+    private Instant updatedAt;
+    //
+    private UUID userId;
+    private Instant lastActiveAt;
 
-    public UserStatus(UUID userId) {
-        super();
+    public UserStatus(UUID userId, Instant lastActiveAt) {
+        this.id = UUID.randomUUID();
+        this.createdAt = Instant.now();
+        //
         this.userId = userId;
-        this.lastLogin = Instant.now();
+        this.lastActiveAt = lastActiveAt;
     }
 
-    //마지막 접속시간 업데이트
-    public void updateLastLogin(Instant lastLogin) {
-        this.lastLogin = lastLogin;
-        setUpdatedAt();
-    }
-
-    public String isLoggedIn() {
-        Instant now = Instant.now();
-        long diff = (now.toEpochMilli() - lastLogin.toEpochMilli()) / (1000 * 60);
-        if (diff < 5) {
-            return "접속 중";
-        } else {
-            return "접속중 아님";
+    public void update(Instant lastActiveAt) {
+        boolean anyValueUpdated = false;
+        if (lastActiveAt != null && !lastActiveAt.equals(this.lastActiveAt)) {
+            this.lastActiveAt = lastActiveAt;
+            anyValueUpdated = true;
         }
+
+        if (anyValueUpdated) {
+            this.updatedAt = Instant.now();
+        }
+    }
+
+    public Boolean isOnline() {
+        Instant instantFiveMinutesAgo = Instant.now().minus(Duration.ofMinutes(5));
+
+        return lastActiveAt.isAfter(instantFiveMinutesAgo);
     }
 }
