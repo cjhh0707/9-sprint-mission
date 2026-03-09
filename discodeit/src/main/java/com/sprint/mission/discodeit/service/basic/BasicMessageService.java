@@ -17,7 +17,9 @@ import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -77,10 +79,25 @@ public class BasicMessageService implements MessageService {
   }
 
   @Override
-  public PageResponse<MessageDto> findAllByChannelId(UUID channelId, Pageable pageable) {
-    Slice<MessageDto> slice = messageRepository.findAllByChannelId(channelId, pageable)
-        .map(messageMapper::toDto);
-    return pageResponseMapper.fromSlice(slice);
+  public PageResponse<MessageDto> findAllByChannelId(UUID channelId, Instant cursor, int size) {
+    Pageable pageable = PageRequest.of(0, size);
+
+    List<Message> messages;
+    if (cursor == null) {
+      messages = messageRepository.findAllByChannelIdOrderByCreatedAtDesc(channelId, pageable);
+    } else {
+      messages = messageRepository.findAllByChannelIdAndCreatedAtBeforeOrderByCreatedAtDesc(
+          channelId, cursor, pageable);
+    }
+
+    List<MessageDto> content = messages.stream()
+        .map(messageMapper::toDto)
+        .toList();
+
+    boolean hasNext = messages.size() == size;
+    Instant nextCursor = hasNext ? messages.get(messages.size() - 1).getCreatedAt() : null;
+
+    return pageResponseMapper.fromSlice(content, nextCursor, size, hasNext);
   }
 
   @Transactional

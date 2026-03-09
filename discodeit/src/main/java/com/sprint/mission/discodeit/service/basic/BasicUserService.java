@@ -65,9 +65,11 @@ public class BasicUserService implements UserService {
     UserStatus userStatus = new UserStatus(user, now);
 
     userRepository.save(user);
+    //userStatusRepository.save(userStatus);
     return userMapper.toDto(user);
   }
 
+  //@Transactional(readOnly = true)
   @Override
   public UserDto find(UUID userId) {
     return userRepository.findById(userId)
@@ -75,6 +77,7 @@ public class BasicUserService implements UserService {
         .orElseThrow(() -> new NoSuchElementException("User with id " + userId + " not found"));
   }
 
+  //@Transactional(readOnly = true)
   @Override
   public List<UserDto> findAll() {
     return userRepository.findAll()

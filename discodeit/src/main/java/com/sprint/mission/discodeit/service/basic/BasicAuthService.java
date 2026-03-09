@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.NoSuchElementException;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
@@ -20,11 +21,14 @@ public class BasicAuthService implements AuthService {
 
   @Override
   public UserDto login(LoginRequest loginRequest) {
-    User user = userRepository.findByUsername(loginRequest.username())
-        .orElseThrow(() -> new NoSuchElementException(
-            "User with username " + loginRequest.username() + " not found"));
+    String username = loginRequest.username();
+    String password = loginRequest.password();
 
-    if (!user.getPassword().equals(loginRequest.password())) {
+    User user = userRepository.findByUsername(username)
+        .orElseThrow(
+            () -> new NoSuchElementException("User with username " + username + " not found"));
+
+    if (!user.getPassword().equals(password)) {
       throw new IllegalArgumentException("Wrong password");
     }
 

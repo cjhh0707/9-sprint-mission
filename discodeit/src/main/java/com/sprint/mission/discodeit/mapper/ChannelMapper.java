@@ -10,6 +10,7 @@ import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -21,10 +22,12 @@ public class ChannelMapper {
   private final UserMapper userMapper;
 
   public ChannelDto toDto(Channel channel) {
-    Instant lastMessageAt = messageRepository.findAllByChannelId(channel.getId())
+    Instant lastMessageAt = messageRepository.findAllByChannelIdOrderByCreatedAtDesc(
+            channel.getId(),
+            PageRequest.of(0, 1))
         .stream()
         .map(Message::getCreatedAt)
-        .max(Instant::compareTo)
+        .findFirst()
         .orElse(null);
 
     List<UserDto> participants = null;
