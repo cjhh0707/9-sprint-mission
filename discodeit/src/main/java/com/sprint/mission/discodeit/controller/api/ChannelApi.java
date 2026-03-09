@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.dto.request.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -27,42 +28,42 @@ public interface ChannelApi {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "201", description = "Public Channel이 성공적으로 생성됨",
-          content = @Content(schema = @Schema(implementation = Channel.class))
+          content = @Content(schema = @Schema(implementation = ChannelDto.class))
       )
   })
-  ResponseEntity<Channel> createPublicChannel(
-      @RequestBody PublicChannelCreateRequest request
+  ResponseEntity<ChannelDto> create(
+      @Parameter(description = "Public Channel 생성 정보") PublicChannelCreateRequest request
   );
 
   @Operation(summary = "Private Channel 생성")
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "201", description = "Private Channel이 성공적으로 생성됨",
-          content = @Content(schema = @Schema(implementation = Channel.class))
+          content = @Content(schema = @Schema(implementation = ChannelDto.class))
       )
   })
-  ResponseEntity<Channel> createPrivateChannel(
-      @RequestBody PrivateChannelCreateRequest request
+  ResponseEntity<ChannelDto> create(
+      @Parameter(description = "Private Channel 생성 정보") PrivateChannelCreateRequest request
   );
 
   @Operation(summary = "Channel 정보 수정")
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "200", description = "Channel 정보가 성공적으로 수정됨",
-          content = @Content(schema = @Schema(implementation = Channel.class))
-      ),
-      @ApiResponse(
-          responseCode = "400", description = "Private Channel은 수정할 수 없음",
-          content = @Content(examples = @ExampleObject("Private channel cannot be updated"))
+          content = @Content(schema = @Schema(implementation = ChannelDto.class))
       ),
       @ApiResponse(
           responseCode = "404", description = "Channel을 찾을 수 없음",
-          content = @Content(examples = @ExampleObject("Channel with id {channelId} not found"))
+          content = @Content(examples = @ExampleObject(value = "Channel with id {channelId} not found"))
+      ),
+      @ApiResponse(
+          responseCode = "400", description = "Private Channel은 수정할 수 없음",
+          content = @Content(examples = @ExampleObject(value = "Private channel cannot be updated"))
       )
   })
-  ResponseEntity<Channel> update(
-      @PathVariable UUID channelId,
-      @RequestBody PublicChannelUpdateRequest request
+  ResponseEntity<ChannelDto> update(
+      @Parameter(description = "수정할 Channel ID") UUID channelId,
+      @Parameter(description = "수정할 Channel 정보") PublicChannelUpdateRequest request
   );
 
   @Operation(summary = "Channel 삭제")
@@ -72,11 +73,11 @@ public interface ChannelApi {
       ),
       @ApiResponse(
           responseCode = "404", description = "Channel을 찾을 수 없음",
-          content = @Content(examples = @ExampleObject("Channel with id {channelId} not found"))
+          content = @Content(examples = @ExampleObject(value = "Channel with id {channelId} not found"))
       )
   })
   ResponseEntity<Void> delete(
-      @PathVariable UUID channelId
+      @Parameter(description = "삭제할 Channel ID") UUID channelId
   );
 
   @Operation(summary = "User가 참여 중인 Channel 목록 조회")
@@ -86,8 +87,7 @@ public interface ChannelApi {
           content = @Content(array = @ArraySchema(schema = @Schema(implementation = ChannelDto.class)))
       )
   })
-  ResponseEntity<List<ChannelDto>> findAllByUserId(
-      @RequestParam UUID userId
+  ResponseEntity<List<ChannelDto>> findAll(
+      @Parameter(description = "조회할 User ID") UUID userId
   );
-
 }

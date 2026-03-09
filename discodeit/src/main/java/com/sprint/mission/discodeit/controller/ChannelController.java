@@ -32,60 +32,41 @@ public class ChannelController implements ChannelApi {
 
   private final ChannelService channelService;
 
-  // 공개 채널 생성
-  @PostMapping(value = "/public", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  public ResponseEntity<Channel> createPublicChannel(
-      @RequestBody PublicChannelCreateRequest request
-  ) {
-    Channel createdchannel = channelService.create(request);
+  @PostMapping(path = "public")
+  public ResponseEntity<ChannelDto> create(@RequestBody PublicChannelCreateRequest request) {
+    ChannelDto createdChannel = channelService.create(request);
     return ResponseEntity
         .status(HttpStatus.CREATED)
-        .body(createdchannel);
+        .body(createdChannel);
   }
 
-  // 비공개 채널 생성
-  @PostMapping(value = "/private", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  public ResponseEntity<Channel> createPrivateChannel(
-      @RequestBody PrivateChannelCreateRequest request
-  ) {
-    Channel createdchannel = channelService.create(request);
+  @PostMapping(path = "private")
+  public ResponseEntity<ChannelDto> create(@RequestBody PrivateChannelCreateRequest request) {
+    ChannelDto createdChannel = channelService.create(request);
     return ResponseEntity
         .status(HttpStatus.CREATED)
-        .body(createdchannel);
+        .body(createdChannel);
   }
 
-  // 공개 채널 수정
-  @PatchMapping(value = "{channelId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  public ResponseEntity<Channel> update(
-      @PathVariable("channelId") UUID channelId,
-      @RequestBody PublicChannelUpdateRequest request
-  ) {
-    Channel updatedchannel = channelService.update(channelId, request);
+  @PatchMapping(path = "{channelId}")
+  public ResponseEntity<ChannelDto> update(@PathVariable("channelId") UUID channelId,
+      @RequestBody PublicChannelUpdateRequest request) {
+    ChannelDto updatedChannel = channelService.update(channelId, request);
     return ResponseEntity
         .status(HttpStatus.OK)
-        .body(updatedchannel);
+        .body(updatedChannel);
   }
 
-  // 채널 삭제
-  @DeleteMapping("{channelId}")
-  @Override
-  public ResponseEntity<Void> delete(
-      @PathVariable("channelId") UUID channelId
-  ) {
+  @DeleteMapping(path = "{channelId}")
+  public ResponseEntity<Void> delete(@PathVariable("channelId") UUID channelId) {
     channelService.delete(channelId);
     return ResponseEntity
-        .status(HttpStatus.NO_CONTENT).build();
+        .status(HttpStatus.NO_CONTENT)
+        .build();
   }
 
-  // 특정 사용자가 볼 수 있는 채널 목록 조회
   @GetMapping
-  @Override
-  public ResponseEntity<List<ChannelDto>> findAllByUserId(
-      @RequestParam("userId") UUID userId
-  ) {
+  public ResponseEntity<List<ChannelDto>> findAll(@RequestParam("userId") UUID userId) {
     List<ChannelDto> channels = channelService.findAllByUserId(userId);
     return ResponseEntity
         .status(HttpStatus.OK)
