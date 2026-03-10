@@ -20,6 +20,7 @@ public class BasicUserStatusService implements UserStatusService {
   private final UserStatusRepository userStatusRepository;
   private final UserStatusMapper userStatusMapper;
 
+  @Transactional(readOnly = true)
   @Override
   public UserStatusDto find(UUID userStatusId) {
     return userStatusRepository.findById(userStatusId)
