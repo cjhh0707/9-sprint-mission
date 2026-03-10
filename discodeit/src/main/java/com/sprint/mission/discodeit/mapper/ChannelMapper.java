@@ -10,41 +10,43 @@ import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
-@Component
-@RequiredArgsConstructor
-public class ChannelMapper {
+@Mapper(componentModel = "spring", uses = {UserMapper.class})
+public abstract class ChannelMapper {
 
-  private final MessageRepository messageRepository;
-  private final ReadStatusRepository readStatusRepository;
-  private final UserMapper userMapper;
+  @Autowired
+  protected MessageRepository messageRepository;
+  @Autowired
+  protected ReadStatusRepository readStatusRepository;
+  @Autowired
+  protected UserMapper userMapper;
 
-  public ChannelDto toDto(Channel channel) {
-    Instant lastMessageAt = messageRepository
+  @Mapping(target = "lastMessageAt", expression = "java(getLastMessageAt(channel))")
+  @Mapping(target = "participants", expression = "java(getParticipants(channel))")
+  public abstract ChannelDto toDto(Channel channel);
+
+  protected Instant getLastMessageAt(Channel channel) {
+    return messageRepository
         .findAllByChannelIdOrderByCreatedAtDesc(channel.getId(), PageRequest.of(0, 1))
         .stream()
         .map(Message::getCreatedAt)
         .findFirst()
         .orElse(null);
+  }
 
-    List<UserDto> participants = null;
+  protected List<UserDto> getParticipants(Channel channel) {
     if (channel.getType() == ChannelType.PRIVATE) {
-      participants = readStatusRepository.findAllByChannelId(channel.getId())
+      return readStatusRepository.findAllByChannelId(channel.getId())
           .stream()
           .map(rs -> userMapper.toDto(rs.getUser()))
           .toList();
     }
-
-    return new ChannelDto(
-        channel.getId(),
-        channel.getType(),
-        channel.getName(),
-        channel.getDescription(),
-        participants,
-        lastMessageAt
-    );
+    return null;
   }
 
 }
