@@ -1,40 +1,45 @@
 package com.sprint.mission.discodeit.entity;
 
-import lombok.Getter;
-
-import java.io.Serializable;
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
-import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
-public class ReadStatus implements Serializable {
-    private static final long serialVersionUID = 1L;
-    private UUID id;
-    private Instant createdAt;
-    private Instant updatedAt;
-    //
-    private UUID userId;
-    private UUID channelId;
-    private Instant lastReadAt;
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Entity
+@Table(
+    name = "read_statuses",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "channel_id"})
+)
+public class ReadStatus extends BaseUpdatableEntity {
 
-    public ReadStatus(UUID userId, UUID channelId, Instant lastReadAt) {
-        this.id = UUID.randomUUID();
-        this.createdAt = Instant.now();
-        //
-        this.userId = userId;
-        this.channelId = channelId;
-        this.lastReadAt = lastReadAt;
-    }
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", columnDefinition = "uuid", nullable = false)
+  private User user;
 
-    public void update(Instant newLastReadAt) {
-        boolean anyValueUpdated = false;
-        if (newLastReadAt != null && !newLastReadAt.equals(this.lastReadAt)) {
-            this.lastReadAt = newLastReadAt;
-            anyValueUpdated = true;
-        }
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "channel_id", columnDefinition = "uuid", nullable = false)
+  private Channel channel;
 
-        if (anyValueUpdated) {
-            this.updatedAt = Instant.now();
-        }
-    }
+  @Column(columnDefinition = "timestamp with time zone", nullable = false)
+  private Instant lastReadAt;
+
+  public ReadStatus(User user, Channel channel, Instant lastReadAt) {
+    this.user = user;
+    this.channel = channel;
+    this.lastReadAt = lastReadAt;
+  }
+
+  public void update(Instant newLastReadAt) {
+    this.lastReadAt = newLastReadAt;
+  }
 }
