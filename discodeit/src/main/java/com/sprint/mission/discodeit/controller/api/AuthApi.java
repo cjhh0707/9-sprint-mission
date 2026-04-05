@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.controller.api;
 
-
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.dto.request.LoginRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,7 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
-@Tag(name = "Auth", description = "Auth API")
+@Tag(name = "Auth", description = "인증 API")
 public interface AuthApi {
 
   @Operation(summary = "로그인")
@@ -28,10 +27,10 @@ public interface AuthApi {
       ),
       @ApiResponse(
           responseCode = "400", description = "비밀번호가 일치하지 않음",
-          content = @Content(examples = @ExampleObject(value = "Wrong Password"))
+          content = @Content(examples = @ExampleObject(value = "Wrong password"))
       )
   })
   ResponseEntity<UserDto> login(
       @Parameter(description = "로그인 정보") LoginRequest loginRequest
   );
-}
+} 

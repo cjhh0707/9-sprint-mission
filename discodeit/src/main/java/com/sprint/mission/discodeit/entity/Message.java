@@ -15,25 +15,24 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "messages")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Message extends BaseUpdatableEntity {
 
-  @Column(columnDefinition = "text")
+  @Column(columnDefinition = "text", nullable = false)
   private String content;
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "channel_id", columnDefinition = "uuid", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "channel_id", columnDefinition = "uuid")
   private Channel channel;
-
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "author_id", columnDefinition = "uuid")
   private User author;
-
-  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+  @BatchSize(size = 100)
+  @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
   @JoinTable(
       name = "message_attachments",
       joinColumns = @JoinColumn(name = "message_id"),
@@ -42,12 +41,10 @@ public class Message extends BaseUpdatableEntity {
   private List<BinaryContent> attachments = new ArrayList<>();
 
   public Message(String content, Channel channel, User author, List<BinaryContent> attachments) {
-    this.content = content;
     this.channel = channel;
+    this.content = content;
     this.author = author;
-    if (attachments != null) {
-      this.attachments = attachments;
-    }
+    this.attachments = attachments;
   }
 
   public void update(String newContent) {
