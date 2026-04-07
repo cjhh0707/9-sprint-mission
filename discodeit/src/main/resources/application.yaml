@@ -1,28 +1,50 @@
 spring:
   application:
     name: discodeit
-  profiles:
-    active: dev
+  servlet:
+    multipart:
+      maxFileSize: 10MB # 파일 하나의 최대 크기
+      maxRequestSize: 30MB  # 한 번에 최대 업로드 가능 용량
+  datasource:
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        default_batch_fetch_size: 100
     open-in-view: false
+  profiles:
+    active:
+      - dev
 
-  boot:
-    admin:
-      client:
-        instance:
-          name: discodeit
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,loggers
+  endpoint:
+    health:
+      show-details: always
+
+info:
+  name: Discodeit
+  version: 1.7.0
+  java:
+    version: 17
+  spring-boot:
+    version: 3.4.0
+  config:
+    datasource:
+      url: ${spring.datasource.url}
+      driver-class-name: ${spring.datasource.driver-class-name}
+    jpa:
+      ddl-auto: ${spring.jpa.hibernate.ddl-auto}
+    storage:
+      type: ${discodeit.storage.type}
+      path: ${discodeit.storage.local.root-path}
+    multipart:
+      max-file-size: ${spring.servlet.multipart.maxFileSize}
+      max-request-size: ${spring.servlet.multipart.maxRequestSize}
 
 discodeit:
-  repository:
-    type: jpa
   storage:
     type: local
     local:
@@ -31,34 +53,3 @@ discodeit:
 logging:
   level:
     root: info
-    org.hibernate.SQL: debug
-    org.hibernate.orm.jdbc.bind: trace
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,loggers
-  info:
-    env:
-      enabled: true
-
-info:
-  app:
-    name: Discodeit
-    version: 1.7.0
-  java:
-    version: 17
-  spring-boot:
-    version: 3.4.0
-  datasource:
-    url: ${spring.datasource.url:N/A}
-    driver-class-name: ${spring.datasource.driver-class-name:N/A}
-  jpa:
-    ddl-auto: ${spring.jpa.hibernate.ddl-auto:validate}
-  storage:
-    type: ${discodeit.storage.type:local}
-    path: ${discodeit.storage.local.root-path:.discodeit/storage}
-  multipart:
-    max-file-size: ${spring.servlet.multipart.max-file-size:1MB}
-    max-request-size: ${spring.servlet.multipart.max-request-size:10MB}
