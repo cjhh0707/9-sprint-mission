@@ -8,6 +8,7 @@ public enum ErrorCode {
     USER_NOT_FOUND("사용자를 찾을 수 없습니다."),
     DUPLICATE_USER("이미 존재하는 사용자입니다."),
     INVALID_USER_CREDENTIALS("잘못된 사용자 인증 정보입니다."),
+    INVALID_PASSWORD("비밀번호가 올바르지 않습니다."),
     
     // Channel 관련 에러 코드
     CHANNEL_NOT_FOUND("채널을 찾을 수 없습니다."),
@@ -18,6 +19,7 @@ public enum ErrorCode {
     
     // BinaryContent 관련 에러 코드
     BINARY_CONTENT_NOT_FOUND("바이너리 컨텐츠를 찾을 수 없습니다."),
+    BINARY_CONTENT_DUPLICATE("이미 존재하는 바이너리 컨텐츠입니다."),
     
     // ReadStatus 관련 에러 코드
     READ_STATUS_NOT_FOUND("읽음 상태를 찾을 수 없습니다."),
