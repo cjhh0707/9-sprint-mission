@@ -62,7 +62,7 @@ class UserIntegrationTest {
   @DisplayName("중복 이메일로 사용자 생성 실패 - 409 반환")
   void createUser_fail_duplicateEmail() throws Exception {
     UserCreateRequest first = new UserCreateRequest("user1", "dup@test.com", "Password1!");
-    UserCreateRequest second = new UserCreateRequest("user2", "dup@test.com", "password456");
+    UserCreateRequest second = new UserCreateRequest("user2", "dup@test.com", "Password2!");
 
     mockMvc.perform(multipart("/api/users")
             .file(buildUserCreatePart(first))
