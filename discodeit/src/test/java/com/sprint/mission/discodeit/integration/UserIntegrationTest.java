@@ -47,7 +47,7 @@ class UserIntegrationTest {
   @Test
   @DisplayName("사용자 생성 통합 테스트 - 성공")
   void createUser_success() throws Exception {
-    UserCreateRequest request = new UserCreateRequest("integrationuser", "integration@test.com", "password123");
+    UserCreateRequest request = new UserCreateRequest("integrationuser", "integration@test.com", "Password1!");
 
     mockMvc.perform(multipart("/api/users")
             .file(buildUserCreatePart(request))
@@ -61,7 +61,7 @@ class UserIntegrationTest {
   @Test
   @DisplayName("중복 이메일로 사용자 생성 실패 - 409 반환")
   void createUser_fail_duplicateEmail() throws Exception {
-    UserCreateRequest first = new UserCreateRequest("user1", "dup@test.com", "password123");
+    UserCreateRequest first = new UserCreateRequest("user1", "dup@test.com", "Password1!");
     UserCreateRequest second = new UserCreateRequest("user2", "dup@test.com", "password456");
 
     mockMvc.perform(multipart("/api/users")
@@ -79,7 +79,7 @@ class UserIntegrationTest {
   @Test
   @DisplayName("전체 사용자 목록 조회 통합 테스트")
   void findAllUsers_success() throws Exception {
-    UserCreateRequest request = new UserCreateRequest("listuser", "list@test.com", "password123");
+    UserCreateRequest request = new UserCreateRequest("listuser", "list@test.com", "Password1!");
 
     mockMvc.perform(multipart("/api/users")
             .file(buildUserCreatePart(request))
@@ -94,7 +94,7 @@ class UserIntegrationTest {
   @Test
   @DisplayName("사용자 삭제 통합 테스트 - 성공")
   void deleteUser_success() throws Exception {
-    UserCreateRequest request = new UserCreateRequest("deleteuser", "delete@test.com", "password123");
+    UserCreateRequest request = new UserCreateRequest("deleteuser", "delete@test.com", "Password1!");
 
     MvcResult result = mockMvc.perform(multipart("/api/users")
             .file(buildUserCreatePart(request))

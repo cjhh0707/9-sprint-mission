@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import static java.time.temporal.ChronoUnit.MILLIS;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -48,7 +49,7 @@ class UserStatusRepositoryTest {
   @DisplayName("사용자 ID로 상태 정보를 찾을 수 있다")
   void findByUserId_ExistingUserId_ReturnsUserStatus() {
     // given
-    Instant now = Instant.now();
+    Instant now = Instant.now().truncatedTo(MILLIS);
     User user = createTestUserWithStatus("testUser", "test@example.com", now);
     UUID userId = user.getId();
 

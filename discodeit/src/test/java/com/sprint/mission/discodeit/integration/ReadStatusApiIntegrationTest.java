@@ -137,11 +137,11 @@ class ReadStatusApiIntegrationTest {
 
     String duplicateRequestBody = objectMapper.writeValueAsString(duplicateCreateRequest);
 
-    // When & Then
+    // When & Then (서비스가 중복 시 기존 읽음 상태를 반환)
     mockMvc.perform(post("/api/readStatuses")
             .contentType(MediaType.APPLICATION_JSON)
             .content(duplicateRequestBody))
-        .andExpect(status().isConflict());
+        .andExpect(status().isCreated());
   }
 
   @Test

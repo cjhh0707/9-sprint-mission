@@ -36,7 +36,7 @@ class ChannelIntegrationTest {
   private ObjectMapper objectMapper;
 
   private String createUserAndGetId(String username, String email) throws Exception {
-    UserCreateRequest request = new UserCreateRequest(username, email, "password123");
+    UserCreateRequest request = new UserCreateRequest(username, email, "Password1!");
     MockMultipartFile part = new MockMultipartFile(
         "userCreateRequest", "", MediaType.APPLICATION_JSON_VALUE,
         objectMapper.writeValueAsBytes(request)
