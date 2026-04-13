@@ -73,7 +73,7 @@ class UserIntegrationTest {
             .file(buildUserCreatePart(second))
             .contentType(MediaType.MULTIPART_FORM_DATA))
         .andExpect(status().isConflict())
-        .andExpect(jsonPath("$.code").value("DUPLICATE_EMAIL"));
+        .andExpect(jsonPath("$.code").value("DUPLICATE_USER"));
   }
 
   @Test
