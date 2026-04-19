@@ -53,7 +53,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 생성 성공 테스트")
-  void createUser_Success() throws Exception {
+  void createUser_success() throws Exception {
     // Given
     UserCreateRequest createRequest = new UserCreateRequest(
         "testuser",
@@ -109,7 +109,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 생성 실패 테스트 - 유효하지 않은 요청")
-  void createUser_Failure_InvalidRequest() throws Exception {
+  void createUser_failure_invalidRequest() throws Exception {
     // Given
     UserCreateRequest invalidRequest = new UserCreateRequest(
         "t", // 최소 길이 위반
@@ -133,7 +133,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 조회 성공 테스트")
-  void findAllUsers_Success() throws Exception {
+  void findAllUsers_success() throws Exception {
     // Given
     UUID userId1 = UUID.randomUUID();
     UUID userId2 = UUID.randomUUID();
@@ -172,7 +172,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 업데이트 성공 테스트")
-  void updateUser_Success() throws Exception {
+  void updateUser_success() throws Exception {
     // Given
     UUID userId = UUID.randomUUID();
     UserUpdateRequest updateRequest = new UserUpdateRequest(
@@ -232,7 +232,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 업데이트 실패 테스트 - 존재하지 않는 사용자")
-  void updateUser_Failure_UserNotFound() throws Exception {
+  void updateUser_failure_userNotFound() throws Exception {
     // Given
     UUID nonExistentUserId = UUID.randomUUID();
     UserUpdateRequest updateRequest = new UserUpdateRequest(
@@ -273,7 +273,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 삭제 성공 테스트")
-  void deleteUser_Success() throws Exception {
+  void deleteUser_success() throws Exception {
     // Given
     UUID userId = UUID.randomUUID();
     willDoNothing().given(userService).delete(userId);
@@ -286,7 +286,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 삭제 실패 테스트 - 존재하지 않는 사용자")
-  void deleteUser_Failure_UserNotFound() throws Exception {
+  void deleteUser_failure_userNotFound() throws Exception {
     // Given
     UUID nonExistentUserId = UUID.randomUUID();
     willThrow(UserNotFoundException.withId(nonExistentUserId))
@@ -300,7 +300,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 상태 업데이트 성공 테스트")
-  void updateUserStatus_Success() throws Exception {
+  void updateUserStatus_success() throws Exception {
     // Given
     UUID userId = UUID.randomUUID();
     UUID statusId = UUID.randomUUID();
@@ -324,7 +324,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 상태 업데이트 실패 테스트 - 존재하지 않는 사용자 상태")
-  void updateUserStatus_Failure_UserStatusNotFound() throws Exception {
+  void updateUserStatus_failure_userStatusNotFound() throws Exception {
     // Given
     UUID userId = UUID.randomUUID();
     Instant lastActiveAt = Instant.now();
@@ -340,4 +340,4 @@ class UserControllerTest {
             .content(objectMapper.writeValueAsString(updateRequest)))
         .andExpect(status().isNotFound());
   }
-} 
+}

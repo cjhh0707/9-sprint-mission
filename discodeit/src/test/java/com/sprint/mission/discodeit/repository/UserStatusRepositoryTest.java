@@ -2,7 +2,6 @@ package com.sprint.mission.discodeit.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import java.time.Instant;
@@ -36,13 +35,10 @@ class UserStatusRepositoryTest {
   private TestEntityManager entityManager;
 
   /**
-   * TestFixture: 테스트용 사용자와 상태 생성
+   * TestFixture: 공통 픽스처 클래스를 활용하여 마지막 활성 시간이 포함된 테스트용 사용자를 생성합니다.
    */
   private User createTestUserWithStatus(String username, String email, Instant lastActiveAt) {
-    BinaryContent profile = new BinaryContent("profile.jpg", 1024L, "image/jpeg");
-    User user = new User(username, email, "password123!@#", profile);
-    UserStatus status = new UserStatus(user, lastActiveAt);
-    return userRepository.save(user);
+    return userRepository.save(RepositoryTestFixture.buildUser(username, email, lastActiveAt));
   }
 
   @Test

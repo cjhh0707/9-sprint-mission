@@ -30,11 +30,10 @@ class ChannelRepositoryTest {
   private TestEntityManager entityManager;
 
   /**
-   * TestFixture: 채널 생성용 테스트 픽스처
+   * TestFixture: 공통 픽스처 클래스를 활용하여 테스트용 채널을 생성합니다.
    */
   private Channel createTestChannel(ChannelType type, String name) {
-    Channel channel = new Channel(type, name, "설명: " + name);
-    return channelRepository.save(channel);
+    return channelRepository.save(RepositoryTestFixture.buildChannel(type, name));
   }
 
   @Test

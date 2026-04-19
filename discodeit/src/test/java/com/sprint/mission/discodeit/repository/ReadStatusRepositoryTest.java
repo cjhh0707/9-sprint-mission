@@ -2,12 +2,10 @@ package com.sprint.mission.discodeit.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -41,22 +39,17 @@ class ReadStatusRepositoryTest {
   private TestEntityManager entityManager;
 
   /**
-   * TestFixture: 테스트용 사용자 생성
+   * TestFixture: 공통 픽스처 클래스를 활용하여 테스트용 사용자를 생성합니다.
    */
   private User createTestUser(String username, String email) {
-    BinaryContent profile = new BinaryContent("profile.jpg", 1024L, "image/jpeg");
-    User user = new User(username, email, "password123!@#", profile);
-    // UserStatus 생성 및 연결
-    UserStatus status = new UserStatus(user, Instant.now());
-    return userRepository.save(user);
+    return userRepository.save(RepositoryTestFixture.buildUser(username, email));
   }
 
   /**
-   * TestFixture: 테스트용 채널 생성
+   * TestFixture: 공통 픽스처 클래스를 활용하여 테스트용 채널을 생성합니다.
    */
   private Channel createTestChannel(ChannelType type, String name) {
-    Channel channel = new Channel(type, name, "설명: " + name);
-    return channelRepository.save(channel);
+    return channelRepository.save(RepositoryTestFixture.buildChannel(type, name));
   }
 
   /**

@@ -7,6 +7,8 @@ public enum ErrorCode {
     // User 관련 에러 코드
     USER_NOT_FOUND("사용자를 찾을 수 없습니다."),
     DUPLICATE_USER("이미 존재하는 사용자입니다."),
+    DUPLICATE_EMAIL("이미 사용 중인 이메일입니다."),
+    DUPLICATE_USERNAME("이미 사용 중인 사용자 이름입니다."),
     INVALID_USER_CREDENTIALS("잘못된 사용자 인증 정보입니다."),
     INVALID_PASSWORD("비밀번호가 올바르지 않습니다."),
     

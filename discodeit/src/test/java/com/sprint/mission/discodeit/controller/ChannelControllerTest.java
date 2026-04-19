@@ -48,19 +48,21 @@ class ChannelControllerTest {
 
   @Test
   @DisplayName("공개 채널 생성 성공 테스트")
-  void createPublicChannel_Success() throws Exception {
+  void createPublicChannel_success() throws Exception {
     // Given
-    PublicChannelCreateRequest createRequest = new PublicChannelCreateRequest(
-        "test-channel",
-        "채널 설명입니다."
-    );
-
+    String channelName = "test-channel";
+    String channelDescription = "채널 설명입니다.";
     UUID channelId = UUID.randomUUID();
+
+    PublicChannelCreateRequest createRequest = new PublicChannelCreateRequest(
+        channelName,
+        channelDescription
+    );
     ChannelDto createdChannel = new ChannelDto(
         channelId,
         ChannelType.PUBLIC,
-        "test-channel",
-        "채널 설명입니다.",
+        channelName,
+        channelDescription,
         new ArrayList<>(),
         Instant.now()
     );
@@ -75,17 +77,20 @@ class ChannelControllerTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").value(channelId.toString()))
         .andExpect(jsonPath("$.type").value("PUBLIC"))
-        .andExpect(jsonPath("$.name").value("test-channel"))
-        .andExpect(jsonPath("$.description").value("채널 설명입니다."));
+        .andExpect(jsonPath("$.name").value(channelName))
+        .andExpect(jsonPath("$.description").value(channelDescription));
   }
 
   @Test
   @DisplayName("공개 채널 생성 실패 테스트 - 유효하지 않은 요청")
-  void createPublicChannel_Failure_InvalidRequest() throws Exception {
-    // Given
+  void createPublicChannel_failure_invalidRequest() throws Exception {
+    // Given - 이름 최소 길이(2자) 위반, 설명 최대 길이(255자) 위반
+    String tooShortName = "a";
+    String tooLongDescription = "채널 설명은 최대 255자까지 가능합니다.".repeat(10);
+
     PublicChannelCreateRequest invalidRequest = new PublicChannelCreateRequest(
-        "a", // 최소 길이 위반 (2자 이상이어야 함)
-        "채널 설명은 최대 255자까지 가능합니다.".repeat(10) // 최대 길이 위반
+        tooShortName,
+        tooLongDescription
     );
 
     // When & Then
@@ -97,18 +102,21 @@ class ChannelControllerTest {
 
   @Test
   @DisplayName("비공개 채널 생성 성공 테스트")
-  void createPrivateChannel_Success() throws Exception {
+  void createPrivateChannel_success() throws Exception {
     // Given
-    List<UUID> participantIds = List.of(UUID.randomUUID(), UUID.randomUUID());
+    UUID userId1 = UUID.randomUUID();
+    UUID userId2 = UUID.randomUUID();
+    UUID channelId = UUID.randomUUID();
+
+    List<UUID> participantIds = List.of(userId1, userId2);
     PrivateChannelCreateRequest createRequest = new PrivateChannelCreateRequest(participantIds);
 
-    UUID channelId = UUID.randomUUID();
-    List<UserDto> participants = new ArrayList<>();
-    for (UUID userId : participantIds) {
-      participants.add(new UserDto(userId, "user-" + userId.toString().substring(0, 5),
-          "user" + userId.toString().substring(0, 5) + "@example.com", null, false));
-    }
-
+    List<UserDto> participants = List.of(
+        new UserDto(userId1, "user-" + userId1.toString().substring(0, 5),
+            "user1@example.com", null, false),
+        new UserDto(userId2, "user-" + userId2.toString().substring(0, 5),
+            "user2@example.com", null, false)
+    );
     ChannelDto createdChannel = new ChannelDto(
         channelId,
         ChannelType.PRIVATE,
@@ -134,19 +142,21 @@ class ChannelControllerTest {
 
   @Test
   @DisplayName("공개 채널 업데이트 성공 테스트")
-  void updateChannel_Success() throws Exception {
+  void updateChannel_success() throws Exception {
     // Given
     UUID channelId = UUID.randomUUID();
-    PublicChannelUpdateRequest updateRequest = new PublicChannelUpdateRequest(
-        "updated-channel",
-        "업데이트된 채널 설명입니다."
-    );
+    String updatedName = "updated-channel";
+    String updatedDescription = "업데이트된 채널 설명입니다.";
 
+    PublicChannelUpdateRequest updateRequest = new PublicChannelUpdateRequest(
+        updatedName,
+        updatedDescription
+    );
     ChannelDto updatedChannel = new ChannelDto(
         channelId,
         ChannelType.PUBLIC,
-        "updated-channel",
-        "업데이트된 채널 설명입니다.",
+        updatedName,
+        updatedDescription,
         new ArrayList<>(),
         Instant.now()
     );
@@ -160,13 +170,13 @@ class ChannelControllerTest {
             .content(objectMapper.writeValueAsString(updateRequest)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(channelId.toString()))
-        .andExpect(jsonPath("$.name").value("updated-channel"))
-        .andExpect(jsonPath("$.description").value("업데이트된 채널 설명입니다."));
+        .andExpect(jsonPath("$.name").value(updatedName))
+        .andExpect(jsonPath("$.description").value(updatedDescription));
   }
 
   @Test
   @DisplayName("채널 업데이트 실패 테스트 - 존재하지 않는 채널")
-  void updateChannel_Failure_ChannelNotFound() throws Exception {
+  void updateChannel_failure_channelNotFound() throws Exception {
     // Given
     UUID nonExistentChannelId = UUID.randomUUID();
     PublicChannelUpdateRequest updateRequest = new PublicChannelUpdateRequest(
@@ -186,7 +196,7 @@ class ChannelControllerTest {
 
   @Test
   @DisplayName("채널 업데이트 실패 테스트 - 비공개 채널 업데이트 시도")
-  void updateChannel_Failure_PrivateChannelUpdate() throws Exception {
+  void updateChannel_failure_privateChannelUpdate() throws Exception {
     // Given
     UUID privateChannelId = UUID.randomUUID();
     PublicChannelUpdateRequest updateRequest = new PublicChannelUpdateRequest(
@@ -206,7 +216,7 @@ class ChannelControllerTest {
 
   @Test
   @DisplayName("채널 삭제 성공 테스트")
-  void deleteChannel_Success() throws Exception {
+  void deleteChannel_success() throws Exception {
     // Given
     UUID channelId = UUID.randomUUID();
     willDoNothing().given(channelService).delete(channelId);
@@ -219,7 +229,7 @@ class ChannelControllerTest {
 
   @Test
   @DisplayName("채널 삭제 실패 테스트 - 존재하지 않는 채널")
-  void deleteChannel_Failure_ChannelNotFound() throws Exception {
+  void deleteChannel_failure_channelNotFound() throws Exception {
     // Given
     UUID nonExistentChannelId = UUID.randomUUID();
     willThrow(ChannelNotFoundException.withId(nonExistentChannelId))
@@ -233,18 +243,20 @@ class ChannelControllerTest {
 
   @Test
   @DisplayName("사용자별 채널 목록 조회 성공 테스트")
-  void findAllByUserId_Success() throws Exception {
+  void findAllByUserId_success() throws Exception {
     // Given
     UUID userId = UUID.randomUUID();
     UUID channelId1 = UUID.randomUUID();
     UUID channelId2 = UUID.randomUUID();
+    String publicChannelName = "public-channel";
+    String publicChannelDescription = "공개 채널 설명";
 
     List<ChannelDto> channels = List.of(
         new ChannelDto(
             channelId1,
             ChannelType.PUBLIC,
-            "public-channel",
-            "공개 채널 설명",
+            publicChannelName,
+            publicChannelDescription,
             new ArrayList<>(),
             Instant.now()
         ),
@@ -267,8 +279,8 @@ class ChannelControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value(channelId1.toString()))
         .andExpect(jsonPath("$[0].type").value("PUBLIC"))
-        .andExpect(jsonPath("$[0].name").value("public-channel"))
+        .andExpect(jsonPath("$[0].name").value(publicChannelName))
         .andExpect(jsonPath("$[1].id").value(channelId2.toString()))
         .andExpect(jsonPath("$[1].type").value("PRIVATE"));
   }
-} 
+}

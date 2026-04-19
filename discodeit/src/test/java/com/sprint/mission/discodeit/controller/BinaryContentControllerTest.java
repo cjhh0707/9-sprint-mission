@@ -42,7 +42,7 @@ class BinaryContentControllerTest {
 
   @Test
   @DisplayName("바이너리 컨텐츠 조회 성공 테스트")
-  void find_Success() throws Exception {
+  void find_success() throws Exception {
     // Given
     UUID binaryContentId = UUID.randomUUID();
     BinaryContentDto binaryContent = new BinaryContentDto(
@@ -66,7 +66,7 @@ class BinaryContentControllerTest {
 
   @Test
   @DisplayName("바이너리 컨텐츠 조회 실패 테스트 - 존재하지 않는 컨텐츠")
-  void find_Failure_BinaryContentNotFound() throws Exception {
+  void find_failure_binaryContentNotFound() throws Exception {
     // Given
     UUID nonExistentId = UUID.randomUUID();
 
@@ -81,7 +81,7 @@ class BinaryContentControllerTest {
 
   @Test
   @DisplayName("ID 목록으로 바이너리 컨텐츠 조회 성공 테스트")
-  void findAllByIdIn_Success() throws Exception {
+  void findAllByIdIn_success() throws Exception {
     // Given
     UUID id1 = UUID.randomUUID();
     UUID id2 = UUID.randomUUID();
@@ -108,7 +108,7 @@ class BinaryContentControllerTest {
 
   @Test
   @DisplayName("바이너리 컨텐츠 다운로드 성공 테스트")
-  void download_Success() throws Exception {
+  void download_success() throws Exception {
     // Given
     UUID binaryContentId = UUID.randomUUID();
     BinaryContentDto binaryContent = new BinaryContentDto(
@@ -120,7 +120,7 @@ class BinaryContentControllerTest {
 
     given(binaryContentService.find(binaryContentId)).willReturn(binaryContent);
 
-    // doReturn 사용하여 타입 문제 우회
+    // doReturn 사용하여 타입 문제 회피
     ResponseEntity<ByteArrayResource> mockResponse = ResponseEntity.ok()
         .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"test.jpg\"")
         .header(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_JPEG_VALUE)
@@ -135,7 +135,7 @@ class BinaryContentControllerTest {
 
   @Test
   @DisplayName("바이너리 컨텐츠 다운로드 실패 테스트 - 존재하지 않는 컨텐츠")
-  void download_Failure_BinaryContentNotFound() throws Exception {
+  void download_failure_binaryContentNotFound() throws Exception {
     // Given
     UUID nonExistentId = UUID.randomUUID();
 
@@ -146,4 +146,4 @@ class BinaryContentControllerTest {
     mockMvc.perform(get("/api/binaryContents/{binaryContentId}/download", nonExistentId))
         .andExpect(status().isNotFound());
   }
-} 
+}

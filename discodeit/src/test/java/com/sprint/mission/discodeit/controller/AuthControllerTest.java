@@ -36,7 +36,7 @@ class AuthControllerTest {
 
   @Test
   @DisplayName("로그인 성공 테스트")
-  void login_Success() throws Exception {
+  void login_success() throws Exception {
     // Given
     LoginRequest loginRequest = new LoginRequest(
         "testuser",
@@ -67,7 +67,7 @@ class AuthControllerTest {
 
   @Test
   @DisplayName("로그인 실패 테스트 - 존재하지 않는 사용자")
-  void login_Failure_UserNotFound() throws Exception {
+  void login_failure_userNotFound() throws Exception {
     // Given
     LoginRequest loginRequest = new LoginRequest(
         "nonexistentuser",
@@ -86,7 +86,7 @@ class AuthControllerTest {
 
   @Test
   @DisplayName("로그인 실패 테스트 - 잘못된 비밀번호")
-  void login_Failure_InvalidCredentials() throws Exception {
+  void login_failure_invalidCredentials() throws Exception {
     // Given
     LoginRequest loginRequest = new LoginRequest(
         "testuser",
@@ -105,7 +105,7 @@ class AuthControllerTest {
 
   @Test
   @DisplayName("로그인 실패 테스트 - 유효하지 않은 요청")
-  void login_Failure_InvalidRequest() throws Exception {
+  void login_failure_invalidRequest() throws Exception {
     // Given
     LoginRequest invalidRequest = new LoginRequest(
         "", // 사용자 이름 비어있음 (NotBlank 위반)

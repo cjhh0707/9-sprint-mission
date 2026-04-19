@@ -1,8 +1,8 @@
 package com.sprint.mission.discodeit.exception;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,23 +39,23 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
     log.error("요청 유효성 검사 실패: {}", ex.getMessage());
-    
-    Map<String, Object> validationErrors = new HashMap<>();
+
+    List<ExceptionDetail> validationErrors = new ArrayList<>();
     ex.getBindingResult().getAllErrors().forEach(error -> {
       String fieldName = ((FieldError) error).getField();
       String errorMessage = error.getDefaultMessage();
-      validationErrors.put(fieldName, errorMessage);
+      validationErrors.add(ExceptionDetail.of(fieldName, errorMessage));
     });
-    
+
     ErrorResponse response = new ErrorResponse(
-        Instant.now(), 
+        Instant.now(),
         "VALIDATION_ERROR",
         "요청 데이터 유효성 검사에 실패했습니다",
         validationErrors,
         ex.getClass().getSimpleName(),
         HttpStatus.BAD_REQUEST.value()
     );
-    
+
     return ResponseEntity
         .status(HttpStatus.BAD_REQUEST)
         .body(response);
@@ -64,9 +64,10 @@ public class GlobalExceptionHandler {
   private HttpStatus determineHttpStatus(DiscodeitException exception) {
     ErrorCode errorCode = exception.getErrorCode();
     return switch (errorCode) {
-      case USER_NOT_FOUND, CHANNEL_NOT_FOUND, MESSAGE_NOT_FOUND, BINARY_CONTENT_NOT_FOUND, 
+      case USER_NOT_FOUND, CHANNEL_NOT_FOUND, MESSAGE_NOT_FOUND, BINARY_CONTENT_NOT_FOUND,
            READ_STATUS_NOT_FOUND, USER_STATUS_NOT_FOUND -> HttpStatus.NOT_FOUND;
-      case DUPLICATE_USER, DUPLICATE_READ_STATUS, DUPLICATE_USER_STATUS,
+      case DUPLICATE_USER, DUPLICATE_EMAIL, DUPLICATE_USERNAME,
+           DUPLICATE_READ_STATUS, DUPLICATE_USER_STATUS,
            BINARY_CONTENT_DUPLICATE -> HttpStatus.CONFLICT;
       case INVALID_USER_CREDENTIALS, INVALID_PASSWORD -> HttpStatus.UNAUTHORIZED;
       case PRIVATE_CHANNEL_UPDATE, INVALID_REQUEST -> HttpStatus.BAD_REQUEST;

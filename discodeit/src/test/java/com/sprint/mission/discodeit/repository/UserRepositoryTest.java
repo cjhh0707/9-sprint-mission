@@ -2,10 +2,7 @@ package com.sprint.mission.discodeit.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.hibernate.Hibernate;
@@ -32,14 +29,10 @@ class UserRepositoryTest {
   private TestEntityManager entityManager;
 
   /**
-   * TestFixture: 테스트에서 일관된 상태를 제공하기 위한 고정된 객체 세트 여러 테스트에서 재사용할 수 있는 테스트 데이터를 생성하는 메서드
+   * TestFixture: 공통 픽스처 클래스를 활용하여 일관된 테스트 데이터를 생성합니다.
    */
   private User createTestUser(String username, String email) {
-    BinaryContent profile = new BinaryContent("profile.jpg", 1024L, "image/jpeg");
-    User user = new User(username, email, "password123!@#", profile);
-    // UserStatus 생성 및 연결
-    UserStatus status = new UserStatus(user, Instant.now());
-    return user;
+    return userRepository.save(RepositoryTestFixture.buildUser(username, email));
   }
 
   @Test
@@ -47,8 +40,7 @@ class UserRepositoryTest {
   void findByUsername_ExistingUsername_ReturnsUser() {
     // given
     String username = "testUser";
-    User user = createTestUser(username, "test@example.com");
-    userRepository.save(user);
+    createTestUser(username, "test@example.com");
 
     // 영속성 컨텍스트 초기화 - 1차 캐시 비우기
     entityManager.flush();
@@ -80,8 +72,7 @@ class UserRepositoryTest {
   void existsByEmail_ExistingEmail_ReturnsTrue() {
     // given
     String email = "test@example.com";
-    User user = createTestUser("testUser", email);
-    userRepository.save(user);
+    createTestUser("testUser", email);
 
     // when
     boolean exists = userRepository.existsByEmail(email);
@@ -107,10 +98,8 @@ class UserRepositoryTest {
   @DisplayName("모든 사용자를 프로필과 상태 정보와 함께 조회할 수 있다")
   void findAllWithProfileAndStatus_ReturnsUsersWithProfileAndStatus() {
     // given
-    User user1 = createTestUser("user1", "user1@example.com");
-    User user2 = createTestUser("user2", "user2@example.com");
-
-    userRepository.saveAll(List.of(user1, user2));
+    createTestUser("user1", "user1@example.com");
+    createTestUser("user2", "user2@example.com");
 
     // 영속성 컨텍스트 초기화 - 1차 캐시 비우기
     entityManager.flush();
