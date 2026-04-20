@@ -1,41 +1,43 @@
 package com.sprint.mission.discodeit.exception;
 
-import org.springframework.http.HttpStatus;
+import lombok.Getter;
 
+@Getter
 public enum ErrorCode {
+    // User 관련 에러 코드
+    USER_NOT_FOUND("사용자를 찾을 수 없습니다."),
+    DUPLICATE_USER("이미 존재하는 사용자입니다."),
+    DUPLICATE_EMAIL("이미 사용 중인 이메일입니다."),
+    DUPLICATE_USERNAME("이미 사용 중인 사용자 이름입니다."),
+    INVALID_USER_CREDENTIALS("잘못된 사용자 인증 정보입니다."),
+    INVALID_PASSWORD("비밀번호가 올바르지 않습니다."),
+    
+    // Channel 관련 에러 코드
+    CHANNEL_NOT_FOUND("채널을 찾을 수 없습니다."),
+    PRIVATE_CHANNEL_UPDATE("비공개 채널은 수정할 수 없습니다."),
+    
+    // Message 관련 에러 코드
+    MESSAGE_NOT_FOUND("메시지를 찾을 수 없습니다."),
+    
+    // BinaryContent 관련 에러 코드
+    BINARY_CONTENT_NOT_FOUND("바이너리 컨텐츠를 찾을 수 없습니다."),
+    BINARY_CONTENT_DUPLICATE("이미 존재하는 바이너리 컨텐츠입니다."),
+    
+    // ReadStatus 관련 에러 코드
+    READ_STATUS_NOT_FOUND("읽음 상태를 찾을 수 없습니다."),
+    DUPLICATE_READ_STATUS("이미 존재하는 읽음 상태입니다."),
+    
+    // UserStatus 관련 에러 코드
+    USER_STATUS_NOT_FOUND("사용자 상태를 찾을 수 없습니다."),
+    DUPLICATE_USER_STATUS("이미 존재하는 사용자 상태입니다."),
+    
+    // Server 에러 코드
+    INTERNAL_SERVER_ERROR("서버 내부 오류가 발생했습니다."),
+    INVALID_REQUEST("잘못된 요청입니다.");
 
-  // User
-  USER_NOT_FOUND("User not found", HttpStatus.NOT_FOUND),
-  DUPLICATE_EMAIL("Email already exists", HttpStatus.CONFLICT),
-  DUPLICATE_USERNAME("Username already exists", HttpStatus.CONFLICT),
-  INVALID_PASSWORD("Invalid password", HttpStatus.UNAUTHORIZED),
-  USER_STATUS_NOT_FOUND("UserStatus not found", HttpStatus.NOT_FOUND),
-  DUPLICATE_USER_STATUS("UserStatus already exists", HttpStatus.CONFLICT),
+    private final String message;
 
-  // Channel
-  CHANNEL_NOT_FOUND("Channel not found", HttpStatus.NOT_FOUND),
-  PRIVATE_CHANNEL_UPDATE("Private channel cannot be updated", HttpStatus.BAD_REQUEST),
-
-  // Message
-  MESSAGE_NOT_FOUND("Message not found", HttpStatus.NOT_FOUND),
-
-  // BinaryContent
-  BINARY_CONTENT_NOT_FOUND("BinaryContent not found", HttpStatus.NOT_FOUND),
-  BINARY_CONTENT_DUPLICATE("BinaryContent already exists", HttpStatus.CONFLICT);
-
-  private final String message;
-  private final HttpStatus httpStatus;
-
-  ErrorCode(String message, HttpStatus httpStatus) {
-    this.message = message;
-    this.httpStatus = httpStatus;
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public HttpStatus getHttpStatus() {
-    return httpStatus;
-  }
-}
+    ErrorCode(String message) {
+        this.message = message;
+    }
+} 

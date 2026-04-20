@@ -44,7 +44,7 @@ class MessageIntegrationTest {
 
   @BeforeEach
   void setUp() throws Exception {
-    UserCreateRequest userReq = new UserCreateRequest("msgauthor", "msgauthor@test.com", "password123");
+    UserCreateRequest userReq = new UserCreateRequest("msgauthor", "msgauthor@test.com", "Password1!");
     MockMultipartFile userPart = new MockMultipartFile(
         "userCreateRequest", "", MediaType.APPLICATION_JSON_VALUE,
         objectMapper.writeValueAsBytes(userReq)

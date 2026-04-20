@@ -39,5 +39,10 @@ bin/
 .DS_Store
 
 ### Discodeit ###
-spring-file-data
 .discodeit
+
+### 숨김 파일 ###
+.*
+!.gitignore
+
+.zip
