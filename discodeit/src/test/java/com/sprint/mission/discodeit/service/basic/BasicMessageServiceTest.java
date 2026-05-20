@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.data.MessageDto;
 import com.sprint.mission.discodeit.dto.data.UserDto;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
@@ -109,7 +110,7 @@ class BasicMessageServiceTest {
         Instant.now(),
         content,
         channelId,
-        new UserDto(authorId, "testUser", "test@example.com", null, true),
+        new UserDto(authorId, "testUser", "test@example.com", null, true, Role.USER),
         List.of(attachmentDto)
     );
   }
@@ -223,7 +224,7 @@ class BasicMessageServiceTest {
         message1CreatedAt,
         content + "1",
         channelId,
-        new UserDto(authorId, "testUser", "test@example.com", null, true),
+        new UserDto(authorId, "testUser", "test@example.com", null, true, Role.USER),
         List.of(attachmentDto)
     );
     
@@ -233,7 +234,7 @@ class BasicMessageServiceTest {
         message2CreatedAt,
         content + "2",
         channelId,
-        new UserDto(authorId, "testUser", "test@example.com", null, true),
+        new UserDto(authorId, "testUser", "test@example.com", null, true, Role.USER),
         List.of(attachmentDto)
     );
     
@@ -278,7 +279,7 @@ class BasicMessageServiceTest {
         message3CreatedAt,
         content + "3",
         channelId,
-        new UserDto(authorId, "testUser", "test@example.com", null, true),
+        new UserDto(authorId, "testUser", "test@example.com", null, true, Role.USER),
         List.of(attachmentDto)
     );
     List<MessageDto> secondPageDtos = List.of(messageDto3);

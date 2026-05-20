@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.data.MessageDto;
 import com.sprint.mission.discodeit.dto.data.UserDto;
+import com.sprint.mission.discodeit.entity.Role;
+import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
@@ -28,6 +30,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +41,10 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(MessageController.class)
+@WebMvcTest(
+    value = MessageController.class,
+    excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
+)
 class MessageControllerTest {
 
   @Autowired
@@ -51,13 +58,12 @@ class MessageControllerTest {
 
   @Test
   @DisplayName("메시지 생성 성공 테스트")
-  void createMessage_success() throws Exception {
+  void createMessage_Success() throws Exception {
     // Given
     UUID channelId = UUID.randomUUID();
     UUID authorId = UUID.randomUUID();
-    String messageContent = "안녕하세요, 테스트 메시지입니다";
     MessageCreateRequest createRequest = new MessageCreateRequest(
-        messageContent,
+        "안녕하세요, 테스트 메시지입니다.",
         channelId,
         authorId
     );
@@ -78,15 +84,16 @@ class MessageControllerTest {
 
     UUID messageId = UUID.randomUUID();
     Instant now = Instant.now();
-
+    
     UserDto author = new UserDto(
         authorId,
         "testuser",
         "test@example.com",
         null,
-        true
+        true,
+        Role.USER
     );
-
+    
     BinaryContentDto attachmentDto = new BinaryContentDto(
         UUID.randomUUID(),
         "test.jpg",
@@ -98,7 +105,7 @@ class MessageControllerTest {
         messageId,
         now,
         now,
-        messageContent,
+        "안녕하세요, 테스트 메시지입니다.",
         channelId,
         author,
         List.of(attachmentDto)
@@ -114,7 +121,7 @@ class MessageControllerTest {
             .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").value(messageId.toString()))
-        .andExpect(jsonPath("$.content").value(messageContent))
+        .andExpect(jsonPath("$.content").value("안녕하세요, 테스트 메시지입니다."))
         .andExpect(jsonPath("$.channelId").value(channelId.toString()))
         .andExpect(jsonPath("$.author.id").value(authorId.toString()))
         .andExpect(jsonPath("$.attachments[0].fileName").value("test.jpg"));
@@ -122,7 +129,7 @@ class MessageControllerTest {
 
   @Test
   @DisplayName("메시지 생성 실패 테스트 - 유효하지 않은 요청")
-  void createMessage_failure_invalidRequest() throws Exception {
+  void createMessage_Failure_InvalidRequest() throws Exception {
     // Given
     MessageCreateRequest invalidRequest = new MessageCreateRequest(
         "", // 내용이 비어있음 (NotBlank 위반)
@@ -146,30 +153,32 @@ class MessageControllerTest {
 
   @Test
   @DisplayName("메시지 업데이트 성공 테스트")
-  void updateMessage_success() throws Exception {
+  void updateMessage_Success() throws Exception {
     // Given
     UUID messageId = UUID.randomUUID();
     UUID channelId = UUID.randomUUID();
     UUID authorId = UUID.randomUUID();
-    String updatedContent = "수정된 메시지 내용입니다";
-
-    MessageUpdateRequest updateRequest = new MessageUpdateRequest(updatedContent);
+    
+    MessageUpdateRequest updateRequest = new MessageUpdateRequest(
+        "수정된 메시지 내용입니다."
+    );
 
     Instant now = Instant.now();
-
+    
     UserDto author = new UserDto(
         authorId,
         "testuser",
         "test@example.com",
         null,
-        true
+        true,
+        Role.USER
     );
 
     MessageDto updatedMessage = new MessageDto(
         messageId,
         now.minusSeconds(60),
         now,
-        updatedContent,
+        "수정된 메시지 내용입니다.",
         channelId,
         author,
         new ArrayList<>()
@@ -184,19 +193,20 @@ class MessageControllerTest {
             .content(objectMapper.writeValueAsString(updateRequest)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(messageId.toString()))
-        .andExpect(jsonPath("$.content").value(updatedContent))
+        .andExpect(jsonPath("$.content").value("수정된 메시지 내용입니다."))
         .andExpect(jsonPath("$.channelId").value(channelId.toString()))
         .andExpect(jsonPath("$.author.id").value(authorId.toString()));
   }
 
   @Test
   @DisplayName("메시지 업데이트 실패 테스트 - 존재하지 않는 메시지")
-  void updateMessage_failure_messageNotFound() throws Exception {
+  void updateMessage_Failure_MessageNotFound() throws Exception {
     // Given
     UUID nonExistentMessageId = UUID.randomUUID();
-    String updatedContent = "수정된 메시지 내용입니다";
-
-    MessageUpdateRequest updateRequest = new MessageUpdateRequest(updatedContent);
+    
+    MessageUpdateRequest updateRequest = new MessageUpdateRequest(
+        "수정된 메시지 내용입니다."
+    );
 
     given(messageService.update(eq(nonExistentMessageId), any(MessageUpdateRequest.class)))
         .willThrow(MessageNotFoundException.withId(nonExistentMessageId));
@@ -210,7 +220,7 @@ class MessageControllerTest {
 
   @Test
   @DisplayName("메시지 삭제 성공 테스트")
-  void deleteMessage_success() throws Exception {
+  void deleteMessage_Success() throws Exception {
     // Given
     UUID messageId = UUID.randomUUID();
     willDoNothing().given(messageService).delete(messageId);
@@ -223,7 +233,7 @@ class MessageControllerTest {
 
   @Test
   @DisplayName("메시지 삭제 실패 테스트 - 존재하지 않는 메시지")
-  void deleteMessage_failure_messageNotFound() throws Exception {
+  void deleteMessage_Failure_MessageNotFound() throws Exception {
     // Given
     UUID nonExistentMessageId = UUID.randomUUID();
     willThrow(MessageNotFoundException.withId(nonExistentMessageId))
@@ -236,30 +246,29 @@ class MessageControllerTest {
   }
 
   @Test
-  @DisplayName("채널의 메시지 목록 조회 성공 테스트")
-  void findAllByChannelId_success() throws Exception {
+  @DisplayName("채널별 메시지 목록 조회 성공 테스트")
+  void findAllByChannelId_Success() throws Exception {
     // Given
     UUID channelId = UUID.randomUUID();
     UUID authorId = UUID.randomUUID();
     Instant cursor = Instant.now();
     Pageable pageable = PageRequest.of(0, 50, Sort.Direction.DESC, "createdAt");
-    String firstMessageContent = "첫 번째 메시지";
-    String secondMessageContent = "두 번째 메시지";
-
+    
     UserDto author = new UserDto(
         authorId,
         "testuser",
         "test@example.com",
         null,
-        true
+        true,
+        Role.USER
     );
-
+    
     List<MessageDto> messages = List.of(
         new MessageDto(
             UUID.randomUUID(),
             cursor.minusSeconds(10),
             cursor.minusSeconds(10),
-            firstMessageContent,
+            "첫 번째 메시지",
             channelId,
             author,
             new ArrayList<>()
@@ -268,16 +277,16 @@ class MessageControllerTest {
             UUID.randomUUID(),
             cursor.minusSeconds(20),
             cursor.minusSeconds(20),
-            secondMessageContent,
+            "두 번째 메시지",
             channelId,
             author,
             new ArrayList<>()
         )
     );
-
+    
     PageResponse<MessageDto> pageResponse = new PageResponse<>(
         messages,
-        cursor.minusSeconds(30), // nextCursor
+        cursor.minusSeconds(30), // nextCursor 값
         pageable.getPageSize(),
         true, // hasNext
         (long) messages.size() // totalElements
@@ -294,11 +303,11 @@ class MessageControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content").isArray())
         .andExpect(jsonPath("$.content.length()").value(2))
-        .andExpect(jsonPath("$.content[0].content").value(firstMessageContent))
-        .andExpect(jsonPath("$.content[1].content").value(secondMessageContent))
+        .andExpect(jsonPath("$.content[0].content").value("첫 번째 메시지"))
+        .andExpect(jsonPath("$.content[1].content").value("두 번째 메시지"))
         .andExpect(jsonPath("$.nextCursor").exists())
         .andExpect(jsonPath("$.size").value(50))
         .andExpect(jsonPath("$.hasNext").value(true))
         .andExpect(jsonPath("$.totalElements").value(2));
   }
-}
+} 

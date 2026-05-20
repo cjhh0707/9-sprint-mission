@@ -1,27 +1,40 @@
+# 빌드 스테이지
 FROM amazoncorretto:17 AS builder
+
+# 작업 디렉토리 설정
 WORKDIR /app
 
-# 의존성 레이어 캐시: gradle 설정 파일을 먼저 복사
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle .
-COPY settings.gradle .
-RUN chmod +x gradlew && ./gradlew dependencies --no-daemon
+# Gradle Wrapper 파일 먼저 복사
+COPY gradle ./gradle
+COPY gradlew ./gradlew
 
-# 소스 코드 복사 후 빌드
-COPY src src
-RUN ./gradlew bootJar -x test --no-daemon
+# Gradle 캐시를 위한 의존성 파일 복사
+COPY build.gradle settings.gradle ./
 
-# 런타임 스테이지: JRE 전용 경량 이미지 사용
-FROM amazoncorretto:17-al2023-headless
+# 의존성 다운로드
+RUN ./gradlew dependencies
+
+# 소스 코드 복사 및 빌드
+COPY src ./src
+RUN ./gradlew build -x test
+
+
+# 런타임 스테이지
+FROM amazoncorretto:17-alpine3.21
+
+# 작업 디렉토리 설정
 WORKDIR /app
 
-ENV PROJECT_NAME=discodeit
-ENV PROJECT_VERSION=1.2-M8
-ENV JVM_OPTS=""
+# 프로젝트 정보를 ENV로 설정
+ENV PROJECT_NAME=discodeit \
+    PROJECT_VERSION=1.2-M8 \
+    JVM_OPTS=""
 
-COPY --from=builder /app/build/libs/${PROJECT_NAME}-${PROJECT_VERSION}.jar .
+# 빌드 스테이지에서 jar 파일만 복사
+COPY --from=builder /app/build/libs/${PROJECT_NAME}-${PROJECT_VERSION}.jar ./
 
+# 80 포트 노출
 EXPOSE 80
 
-ENTRYPOINT ["sh", "-c", "java ${JVM_OPTS} -jar /app/${PROJECT_NAME}-${PROJECT_VERSION}.jar"]
+# jar 파일 실행
+ENTRYPOINT ["sh", "-c", "java ${JVM_OPTS} -jar ${PROJECT_NAME}-${PROJECT_VERSION}.jar"]

@@ -4,7 +4,6 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import java.time.Instant;
 
 /**
@@ -28,23 +27,14 @@ public class RepositoryTestFixture {
             DEFAULT_PROFILE_SIZE,
             DEFAULT_PROFILE_TYPE
         );
-        User user = new User(username, email, DEFAULT_PASSWORD, profile);
-        new UserStatus(user, Instant.now());
-        return user;
+        return new User(username, email, DEFAULT_PASSWORD, profile);
     }
 
     /**
      * 마지막 활성 시간을 지정한 테스트용 User 엔티티를 생성합니다.
      */
     public static User buildUser(String username, String email, Instant lastActiveAt) {
-        BinaryContent profile = new BinaryContent(
-            DEFAULT_PROFILE_NAME,
-            DEFAULT_PROFILE_SIZE,
-            DEFAULT_PROFILE_TYPE
-        );
-        User user = new User(username, email, DEFAULT_PASSWORD, profile);
-        new UserStatus(user, lastActiveAt);
-        return user;
+        return buildUser(username, email);
     }
 
     /**
