@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
-import static org.mockito.ArgumentMatchers.anyString;
 
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
@@ -16,9 +15,7 @@ import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
-import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,13 +25,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 class BasicUserServiceTest {
 
   @Mock
@@ -42,19 +36,10 @@ class BasicUserServiceTest {
 
   @Mock
   private UserMapper userMapper;
-
   @Mock
   private PasswordEncoder passwordEncoder;
 
-  @Mock
-  private BinaryContentRepository binaryContentRepository;
-
-  @Mock
-  private BinaryContentStorage binaryContentStorage;
-
-  @Mock
-  private org.springframework.security.core.session.SessionRegistry sessionRegistry;
-
+  @InjectMocks
   private BasicUserService userService;
 
   private UUID userId;
@@ -66,14 +51,6 @@ class BasicUserServiceTest {
 
   @BeforeEach
   void setUp() {
-    userService = new BasicUserService(
-        userRepository,
-        userMapper,
-        binaryContentRepository,
-        binaryContentStorage,
-        passwordEncoder,
-        sessionRegistry
-    );
     userId = UUID.randomUUID();
     username = "testUser";
     email = "test@example.com";
@@ -82,8 +59,6 @@ class BasicUserServiceTest {
     user = new User(username, email, password, null);
     ReflectionTestUtils.setField(user, "id", userId);
     userDto = new UserDto(userId, username, email, null, true, Role.USER);
-
-    given(passwordEncoder.encode(anyString())).willReturn("encodedPassword");
   }
 
   @Test
@@ -91,7 +66,6 @@ class BasicUserServiceTest {
   void createUser_Success() {
     // given
     UserCreateRequest request = new UserCreateRequest(username, email, password);
-    given(passwordEncoder.encode(anyString())).willReturn("encodedPassword");
     given(userRepository.existsByEmail(eq(email))).willReturn(false);
     given(userRepository.existsByUsername(eq(username))).willReturn(false);
     given(userMapper.toDto(any(User.class))).willReturn(userDto);
@@ -163,7 +137,6 @@ class BasicUserServiceTest {
     String newPassword = "newPassword";
     UserUpdateRequest request = new UserUpdateRequest(newUsername, newEmail, newPassword);
 
-    given(passwordEncoder.encode(anyString())).willReturn("encodedPassword");
     given(userRepository.findById(eq(userId))).willReturn(Optional.of(user));
     given(userRepository.existsByEmail(eq(newEmail))).willReturn(false);
     given(userRepository.existsByUsername(eq(newUsername))).willReturn(false);

@@ -9,7 +9,7 @@ CREATE TABLE users
     email      varchar(100) UNIQUE      NOT NULL,
     password   varchar(60)              NOT NULL,
     profile_id uuid,
-    role        varchar(20)             NOT NULL DEFAULT 'USER'
+    role       varchar(20)              NOT NULL
 );
 
 -- BinaryContent
@@ -22,6 +22,7 @@ CREATE TABLE binary_contents
     content_type varchar(100)             NOT NULL
 --     ,bytes        bytea        NOT NULL
 );
+
 
 -- Channel
 CREATE TABLE channels

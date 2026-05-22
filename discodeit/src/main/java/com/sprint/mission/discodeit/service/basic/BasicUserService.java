@@ -3,7 +3,6 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
-import com.sprint.mission.discodeit.dto.request.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
@@ -12,20 +11,17 @@ import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -37,7 +33,6 @@ public class BasicUserService implements UserService {
   private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentStorage binaryContentStorage;
   private final PasswordEncoder passwordEncoder;
-  private final SessionRegistry sessionRegistry;
 
   @Transactional
   @Override
@@ -67,9 +62,10 @@ public class BasicUserService implements UserService {
           return binaryContent;
         })
         .orElse(null);
-    String password = passwordEncoder.encode(userCreateRequest.password());
+    String password = userCreateRequest.password();
+    String encodedPassword = passwordEncoder.encode(password);
 
-    User user = new User(username, email, password, nullableProfile);
+    User user = new User(username, email, encodedPassword, nullableProfile);
 
     userRepository.save(user);
     log.info("사용자 생성 완료: id={}, username={}", user.getId(), username);
@@ -91,27 +87,17 @@ public class BasicUserService implements UserService {
   @Override
   public List<UserDto> findAll() {
     log.debug("모든 사용자 조회 시작");
-
-    Set<UUID> onlineUserIds = sessionRegistry.getAllPrincipals().stream()
-        .filter(p -> p instanceof DiscodeitUserDetails)
-        .map(p -> ((DiscodeitUserDetails) p).getUserDto().id())
-        .collect(java.util.stream.Collectors.toSet());
-
-    List<UserDto> userDtos = userRepository.findAllWithProfile().stream()
-        .map(user -> {
-          UserDto dto = userMapper.toDto(user);
-          boolean online = onlineUserIds.contains(user.getId());
-          return new UserDto(dto.id(), dto.username(), dto.email(), dto.profile(), online, dto.role());
-        })
+    List<UserDto> userDtos = userRepository.findAllWithProfile()
+        .stream()
+        .map(userMapper::toDto)
         .toList();
-
     log.info("모든 사용자 조회 완료: 총 {}명", userDtos.size());
     return userDtos;
   }
 
+  @PreAuthorize("principal.userDto.id == #userId")
   @Transactional
   @Override
-  @PreAuthorize("hasRole('ADMIN') or #userId.equals(authentication.principal.userDto.id)")
   public UserDto update(UUID userId, UserUpdateRequest userUpdateRequest,
       Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
     log.debug("사용자 수정 시작: id={}, request={}", userId, userUpdateRequest);
@@ -147,16 +133,18 @@ public class BasicUserService implements UserService {
         })
         .orElse(null);
 
-    String newPassword = passwordEncoder.encode(userUpdateRequest.newPassword());
-    user.update(newUsername, newEmail, newPassword, nullableProfile);
+    String newPassword = userUpdateRequest.newPassword();
+    String encodedPassword = Optional.ofNullable(newPassword).map(passwordEncoder::encode)
+        .orElse(user.getPassword());
+    user.update(newUsername, newEmail, encodedPassword, nullableProfile);
 
     log.info("사용자 수정 완료: id={}", userId);
     return userMapper.toDto(user);
   }
 
+  @PreAuthorize("principal.userDto.id == #userId")
   @Transactional
   @Override
-  @PreAuthorize("hasRole('ADMIN') or #userId.equals(authentication.principal.userDto.id)")
   public void delete(UUID userId) {
     log.debug("사용자 삭제 시작: id={}", userId);
 
@@ -166,23 +154,5 @@ public class BasicUserService implements UserService {
 
     userRepository.deleteById(userId);
     log.info("사용자 삭제 완료: id={}", userId);
-  }
-
-  @Transactional
-  @Override
-  @PreAuthorize("hasRole('ADMIN')")
-  public UserDto updateRole(UserRoleUpdateRequest request) {
-    log.debug("사용자 권한 수정 시작: userId={}, newRole={}", request.userId(), request.newRole());
-    User user = userRepository.findById(request.userId())
-        .orElseThrow(() -> UserNotFoundException.withId(request.userId()));
-    user.updateRole(request.newRole());
-    sessionRegistry.getAllPrincipals().stream()
-        .filter(p -> p instanceof DiscodeitUserDetails)
-        .map(p -> (DiscodeitUserDetails) p)
-        .filter(d -> d.getUserDto().id().equals(request.userId()))
-        .flatMap(d -> sessionRegistry.getAllSessions(d, false).stream())
-        .forEach(org.springframework.security.core.session.SessionInformation::expireNow);
-    log.info("사용자 권한 수정 완료: userId={}, role={}", request.userId(), request.newRole());
-    return userMapper.toDto(user);
   }
 }
