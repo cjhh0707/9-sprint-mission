@@ -16,27 +16,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.data.UserDto;
-import com.sprint.mission.discodeit.dto.data.UserStatusDto;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
-import com.sprint.mission.discodeit.dto.request.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.service.UserStatusService;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(UserController.class)
+@WebMvcTest(
+    value = UserController.class,
+    excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
+)
 class UserControllerTest {
 
   @Autowired
@@ -48,12 +50,9 @@ class UserControllerTest {
   @MockitoBean
   private UserService userService;
 
-  @MockitoBean
-  private UserStatusService userStatusService;
-
   @Test
   @DisplayName("사용자 생성 성공 테스트")
-  void createUser_success() throws Exception {
+  void createUser_Success() throws Exception {
     // Given
     UserCreateRequest createRequest = new UserCreateRequest(
         "testuser",
@@ -88,7 +87,8 @@ class UserControllerTest {
         "testuser",
         "test@example.com",
         profileDto,
-        false
+        false,
+        Role.USER
     );
 
     given(userService.create(any(UserCreateRequest.class), any(Optional.class)))
@@ -109,7 +109,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 생성 실패 테스트 - 유효하지 않은 요청")
-  void createUser_failure_invalidRequest() throws Exception {
+  void createUser_Failure_InvalidRequest() throws Exception {
     // Given
     UserCreateRequest invalidRequest = new UserCreateRequest(
         "t", // 최소 길이 위반
@@ -133,7 +133,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 조회 성공 테스트")
-  void findAllUsers_success() throws Exception {
+  void findAllUsers_Success() throws Exception {
     // Given
     UUID userId1 = UUID.randomUUID();
     UUID userId2 = UUID.randomUUID();
@@ -143,7 +143,8 @@ class UserControllerTest {
         "user1",
         "user1@example.com",
         null,
-        true
+        true,
+        Role.USER
     );
 
     UserDto user2 = new UserDto(
@@ -151,7 +152,8 @@ class UserControllerTest {
         "user2",
         "user2@example.com",
         null,
-        false
+        false,
+        Role.USER
     );
 
     List<UserDto> users = List.of(user1, user2);
@@ -172,7 +174,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 업데이트 성공 테스트")
-  void updateUser_success() throws Exception {
+  void updateUser_Success() throws Exception {
     // Given
     UUID userId = UUID.randomUUID();
     UserUpdateRequest updateRequest = new UserUpdateRequest(
@@ -207,7 +209,8 @@ class UserControllerTest {
         "updateduser",
         "updated@example.com",
         profileDto,
-        true
+        true,
+        Role.USER
     );
 
     given(userService.update(eq(userId), any(UserUpdateRequest.class), any(Optional.class)))
@@ -232,7 +235,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 업데이트 실패 테스트 - 존재하지 않는 사용자")
-  void updateUser_failure_userNotFound() throws Exception {
+  void updateUser_Failure_UserNotFound() throws Exception {
     // Given
     UUID nonExistentUserId = UUID.randomUUID();
     UserUpdateRequest updateRequest = new UserUpdateRequest(
@@ -273,7 +276,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 삭제 성공 테스트")
-  void deleteUser_success() throws Exception {
+  void deleteUser_Success() throws Exception {
     // Given
     UUID userId = UUID.randomUUID();
     willDoNothing().given(userService).delete(userId);
@@ -286,7 +289,7 @@ class UserControllerTest {
 
   @Test
   @DisplayName("사용자 삭제 실패 테스트 - 존재하지 않는 사용자")
-  void deleteUser_failure_userNotFound() throws Exception {
+  void deleteUser_Failure_UserNotFound() throws Exception {
     // Given
     UUID nonExistentUserId = UUID.randomUUID();
     willThrow(UserNotFoundException.withId(nonExistentUserId))
@@ -297,47 +300,4 @@ class UserControllerTest {
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound());
   }
-
-  @Test
-  @DisplayName("사용자 상태 업데이트 성공 테스트")
-  void updateUserStatus_success() throws Exception {
-    // Given
-    UUID userId = UUID.randomUUID();
-    UUID statusId = UUID.randomUUID();
-    Instant lastActiveAt = Instant.now();
-
-    UserStatusUpdateRequest updateRequest = new UserStatusUpdateRequest(lastActiveAt);
-    UserStatusDto updatedStatus = new UserStatusDto(statusId, userId, lastActiveAt);
-
-    given(userStatusService.updateByUserId(eq(userId), any(UserStatusUpdateRequest.class)))
-        .willReturn(updatedStatus);
-
-    // When & Then
-    mockMvc.perform(patch("/api/users/{userId}/userStatus", userId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(updateRequest)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value(statusId.toString()))
-        .andExpect(jsonPath("$.userId").value(userId.toString()))
-        .andExpect(content().json(objectMapper.writeValueAsString(updatedStatus)));
-  }
-
-  @Test
-  @DisplayName("사용자 상태 업데이트 실패 테스트 - 존재하지 않는 사용자 상태")
-  void updateUserStatus_failure_userStatusNotFound() throws Exception {
-    // Given
-    UUID userId = UUID.randomUUID();
-    Instant lastActiveAt = Instant.now();
-
-    UserStatusUpdateRequest updateRequest = new UserStatusUpdateRequest(lastActiveAt);
-
-    given(userStatusService.updateByUserId(eq(userId), any(UserStatusUpdateRequest.class)))
-        .willThrow(UserNotFoundException.withId(userId));
-
-    // When & Then
-    mockMvc.perform(patch("/api/users/{userId}/userStatus", userId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(updateRequest)))
-        .andExpect(status().isNotFound());
-  }
-}
+} 

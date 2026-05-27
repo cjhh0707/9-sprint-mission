@@ -45,4 +45,6 @@ bin/
 .*
 !.gitignore
 
-.zip
+
+### Github Actions ###
+!.github/

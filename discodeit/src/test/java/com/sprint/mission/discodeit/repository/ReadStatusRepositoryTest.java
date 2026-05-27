@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
@@ -39,17 +40,20 @@ class ReadStatusRepositoryTest {
   private TestEntityManager entityManager;
 
   /**
-   * TestFixture: 공통 픽스처 클래스를 활용하여 테스트용 사용자를 생성합니다.
+   * TestFixture: 테스트용 사용자 생성
    */
   private User createTestUser(String username, String email) {
-    return userRepository.save(RepositoryTestFixture.buildUser(username, email));
+    BinaryContent profile = new BinaryContent("profile.jpg", 1024L, "image/jpeg");
+    User user = new User(username, email, "password123!@#", profile);
+    return userRepository.save(user);
   }
 
   /**
-   * TestFixture: 공통 픽스처 클래스를 활용하여 테스트용 채널을 생성합니다.
+   * TestFixture: 테스트용 채널 생성
    */
   private Channel createTestChannel(ChannelType type, String name) {
-    return channelRepository.save(RepositoryTestFixture.buildChannel(type, name));
+    Channel channel = new Channel(type, name, "설명: " + name);
+    return channelRepository.save(channel);
   }
 
   /**
@@ -109,7 +113,6 @@ class ReadStatusRepositoryTest {
     // 사용자 정보가 함께 로드되었는지 확인 (FETCH JOIN)
     for (ReadStatus status : readStatuses) {
       assertThat(Hibernate.isInitialized(status.getUser())).isTrue();
-      assertThat(Hibernate.isInitialized(status.getUser().getStatus())).isTrue();
       assertThat(Hibernate.isInitialized(status.getUser().getProfile())).isTrue();
     }
   }

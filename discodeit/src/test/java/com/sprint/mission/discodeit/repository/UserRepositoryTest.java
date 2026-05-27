@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import java.util.List;
 import java.util.Optional;
@@ -29,10 +30,11 @@ class UserRepositoryTest {
   private TestEntityManager entityManager;
 
   /**
-   * TestFixture: 공통 픽스처 클래스를 활용하여 일관된 테스트 데이터를 생성합니다.
+   * TestFixture: 테스트에서 일관된 상태를 제공하기 위한 고정된 객체 세트 여러 테스트에서 재사용할 수 있는 테스트 데이터를 생성하는 메서드
    */
   private User createTestUser(String username, String email) {
-    return userRepository.save(RepositoryTestFixture.buildUser(username, email));
+    BinaryContent profile = new BinaryContent("profile.jpg", 1024L, "image/jpeg");
+    return new User(username, email, "password123!@#", profile);
   }
 
   @Test
@@ -40,7 +42,8 @@ class UserRepositoryTest {
   void findByUsername_ExistingUsername_ReturnsUser() {
     // given
     String username = "testUser";
-    createTestUser(username, "test@example.com");
+    User user = createTestUser(username, "test@example.com");
+    userRepository.save(user);
 
     // 영속성 컨텍스트 초기화 - 1차 캐시 비우기
     entityManager.flush();
@@ -72,7 +75,8 @@ class UserRepositoryTest {
   void existsByEmail_ExistingEmail_ReturnsTrue() {
     // given
     String email = "test@example.com";
-    createTestUser("testUser", email);
+    User user = createTestUser("testUser", email);
+    userRepository.save(user);
 
     // when
     boolean exists = userRepository.existsByEmail(email);
@@ -95,33 +99,28 @@ class UserRepositoryTest {
   }
 
   @Test
-  @DisplayName("모든 사용자를 프로필과 상태 정보와 함께 조회할 수 있다")
-  void findAllWithProfileAndStatus_ReturnsUsersWithProfileAndStatus() {
+  @DisplayName("모든 사용자를 프로필 정보와 함께 조회할 수 있다")
+  void findAllWithProfile_ReturnsUsersWithProfile() {
     // given
-    createTestUser("user1", "user1@example.com");
-    createTestUser("user2", "user2@example.com");
+    User user1 = createTestUser("user1", "user1@example.com");
+    User user2 = createTestUser("user2", "user2@example.com");
 
-    // 영속성 컨텍스트 초기화 - 1차 캐시 비우기
+    userRepository.saveAll(List.of(user1, user2));
+
     entityManager.flush();
     entityManager.clear();
 
     // when
-    List<User> users = userRepository.findAllWithProfileAndStatus();
+    List<User> users = userRepository.findAllWithProfile();
 
     // then
     assertThat(users).hasSize(2);
     assertThat(users).extracting("username").containsExactlyInAnyOrder("user1", "user2");
 
-    // 프로필과 상태 정보가 함께 조회되었는지 확인 - 프록시 초기화 없이도 접근 가능한지 테스트
-    User foundUser1 = users.stream().filter(u -> u.getUsername().equals("user1")).findFirst()
-        .orElseThrow();
-    User foundUser2 = users.stream().filter(u -> u.getUsername().equals("user2")).findFirst()
-        .orElseThrow();
+    User foundUser1 = users.stream().filter(u -> u.getUsername().equals("user1")).findFirst().orElseThrow();
+    User foundUser2 = users.stream().filter(u -> u.getUsername().equals("user2")).findFirst().orElseThrow();
 
-    // 프록시 초기화 여부 확인
     assertThat(Hibernate.isInitialized(foundUser1.getProfile())).isTrue();
-    assertThat(Hibernate.isInitialized(foundUser1.getStatus())).isTrue();
     assertThat(Hibernate.isInitialized(foundUser2.getProfile())).isTrue();
-    assertThat(Hibernate.isInitialized(foundUser2.getStatus())).isTrue();
   }
 } 

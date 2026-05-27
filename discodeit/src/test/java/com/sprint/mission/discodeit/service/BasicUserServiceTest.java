@@ -6,23 +6,18 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.ArgumentMatchers.any;
 
-import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.data.UserDto;
-import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.basic.BasicUserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
-import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -31,8 +26,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class BasicUserServiceTest {
 
   @InjectMocks
@@ -41,22 +40,22 @@ class BasicUserServiceTest {
   @Mock
   private UserRepository userRepository;
   @Mock
-  private UserStatusRepository userStatusRepository;
+  private org.springframework.security.core.session.SessionRegistry sessionRegistry;
   @Mock
   private UserMapper userMapper;
   @Mock
   private BinaryContentRepository binaryContentRepository;
   @Mock
   private BinaryContentStorage binaryContentStorage;
+  @Mock
+  private PasswordEncoder passwordEncoder;
 
   private User createMockUser(String username, String email) {
-    User user = new User(username, email, "password123", null);
-    UserStatus status = new UserStatus(user, Instant.now());
-    return user;
+    return new User(username, email, "password123", null);
   }
 
   private UserDto createMockUserDto(UUID id, String username, String email) {
-    return new UserDto(id, username, email, null, true);
+    return new UserDto(id, username, email, null, true, Role.USER);
   }
 
   // ======================== create 테스트 ========================

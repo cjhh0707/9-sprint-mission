@@ -1,121 +1,65 @@
 package com.sprint.mission.discodeit.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willThrow;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.config.TestSecurityConfig;
 import com.sprint.mission.discodeit.dto.data.UserDto;
-import com.sprint.mission.discodeit.dto.request.LoginRequest;
-import com.sprint.mission.discodeit.exception.user.InvalidCredentialsException;
-import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
-import com.sprint.mission.discodeit.service.AuthService;
+import com.sprint.mission.discodeit.entity.Role;
+import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
+import com.sprint.mission.discodeit.security.DiscodeitUserDetailsService;
+import com.sprint.mission.discodeit.security.LoginFailureHandler;
+import com.sprint.mission.discodeit.security.LoginSuccessHandler;
+import com.sprint.mission.discodeit.service.UserService;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(AuthController.class)
+@Import(TestSecurityConfig.class)
 class AuthControllerTest {
 
   @Autowired
   private MockMvc mockMvc;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  @MockitoBean
+  private LoginSuccessHandler loginSuccessHandler;
 
   @MockitoBean
-  private AuthService authService;
+  private LoginFailureHandler loginFailureHandler;
+
+  @MockitoBean
+  private DiscodeitUserDetailsService userDetailsService;
+
+  @MockitoBean
+  private UserService userService;
 
   @Test
-  @DisplayName("로그인 성공 테스트")
-  void login_success() throws Exception {
-    // Given
-    LoginRequest loginRequest = new LoginRequest(
-        "testuser",
-        "Password1!"
-    );
+  @DisplayName("CSRF 토큰 발급 - 203 응답")
+  void getCsrfToken_Success() throws Exception {
+    mockMvc.perform(get("/api/auth/csrf-token"))
+        .andExpect(status().is(203));
+  }
 
+  @Test
+  @DisplayName("인증된 사용자 정보 조회 성공")
+  void me_Success() throws Exception {
     UUID userId = UUID.randomUUID();
-    UserDto loggedInUser = new UserDto(
-        userId,
-        "testuser",
-        "test@example.com",
-        null,
-        true
-    );
+    UserDto userDto = new UserDto(userId, "testuser", "test@example.com", null, true, Role.USER);
+    DiscodeitUserDetails userDetails = new DiscodeitUserDetails(userDto, "encodedPassword");
 
-    given(authService.login(any(LoginRequest.class))).willReturn(loggedInUser);
-
-    // When & Then
-    mockMvc.perform(post("/api/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(loginRequest)))
+    mockMvc.perform(get("/api/auth/me")
+            .with(user(userDetails)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(userId.toString()))
         .andExpect(jsonPath("$.username").value("testuser"))
-        .andExpect(jsonPath("$.email").value("test@example.com"))
-        .andExpect(jsonPath("$.online").value(true));
+        .andExpect(jsonPath("$.email").value("test@example.com"));
   }
-
-  @Test
-  @DisplayName("로그인 실패 테스트 - 존재하지 않는 사용자")
-  void login_failure_userNotFound() throws Exception {
-    // Given
-    LoginRequest loginRequest = new LoginRequest(
-        "nonexistentuser",
-        "Password1!"
-    );
-
-    given(authService.login(any(LoginRequest.class)))
-        .willThrow(UserNotFoundException.withUsername("nonexistentuser"));
-
-    // When & Then
-    mockMvc.perform(post("/api/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(loginRequest)))
-        .andExpect(status().isNotFound());
-  }
-
-  @Test
-  @DisplayName("로그인 실패 테스트 - 잘못된 비밀번호")
-  void login_failure_invalidCredentials() throws Exception {
-    // Given
-    LoginRequest loginRequest = new LoginRequest(
-        "testuser",
-        "WrongPassword1!"
-    );
-
-    given(authService.login(any(LoginRequest.class)))
-        .willThrow(InvalidCredentialsException.wrongPassword());
-
-    // When & Then
-    mockMvc.perform(post("/api/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(loginRequest)))
-        .andExpect(status().isUnauthorized());
-  }
-
-  @Test
-  @DisplayName("로그인 실패 테스트 - 유효하지 않은 요청")
-  void login_failure_invalidRequest() throws Exception {
-    // Given
-    LoginRequest invalidRequest = new LoginRequest(
-        "", // 사용자 이름 비어있음 (NotBlank 위반)
-        ""  // 비밀번호 비어있음 (NotBlank 위반)
-    );
-
-    // When & Then
-    mockMvc.perform(post("/api/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(invalidRequest)))
-        .andExpect(status().isBadRequest());
-  }
-} 
+}

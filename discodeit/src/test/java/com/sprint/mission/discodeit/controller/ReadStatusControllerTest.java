@@ -22,12 +22,17 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(ReadStatusController.class)
+@WebMvcTest(
+    value = ReadStatusController.class,
+    excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
+)
 class ReadStatusControllerTest {
 
   @Autowired
@@ -41,12 +46,12 @@ class ReadStatusControllerTest {
 
   @Test
   @DisplayName("읽음 상태 생성 성공 테스트")
-  void create_success() throws Exception {
+  void create_Success() throws Exception {
     // Given
     UUID userId = UUID.randomUUID();
     UUID channelId = UUID.randomUUID();
     Instant lastReadAt = Instant.now();
-
+    
     ReadStatusCreateRequest createRequest = new ReadStatusCreateRequest(
         userId,
         channelId,
@@ -77,7 +82,7 @@ class ReadStatusControllerTest {
 
   @Test
   @DisplayName("읽음 상태 생성 실패 테스트 - 유효하지 않은 요청")
-  void create_failure_invalidRequest() throws Exception {
+  void create_Failure_InvalidRequest() throws Exception {
     // Given
     ReadStatusCreateRequest invalidRequest = new ReadStatusCreateRequest(
         null, // userId가 null (NotNull 위반)
@@ -94,13 +99,13 @@ class ReadStatusControllerTest {
 
   @Test
   @DisplayName("읽음 상태 업데이트 성공 테스트")
-  void update_success() throws Exception {
+  void update_Success() throws Exception {
     // Given
     UUID readStatusId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
     UUID channelId = UUID.randomUUID();
     Instant newLastReadAt = Instant.now();
-
+    
     ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(newLastReadAt);
 
     ReadStatusDto updatedReadStatus = new ReadStatusDto(
@@ -126,11 +131,11 @@ class ReadStatusControllerTest {
 
   @Test
   @DisplayName("읽음 상태 업데이트 실패 테스트 - 존재하지 않는 읽음 상태")
-  void update_failure_readStatusNotFound() throws Exception {
+  void update_Failure_ReadStatusNotFound() throws Exception {
     // Given
     UUID nonExistentId = UUID.randomUUID();
     Instant newLastReadAt = Instant.now();
-
+    
     ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(newLastReadAt);
 
     given(readStatusService.update(eq(nonExistentId), any(ReadStatusUpdateRequest.class)))
@@ -145,13 +150,13 @@ class ReadStatusControllerTest {
 
   @Test
   @DisplayName("사용자별 읽음 상태 목록 조회 성공 테스트")
-  void findAllByUserId_success() throws Exception {
+  void findAllByUserId_Success() throws Exception {
     // Given
     UUID userId = UUID.randomUUID();
     UUID channelId1 = UUID.randomUUID();
     UUID channelId2 = UUID.randomUUID();
     Instant now = Instant.now();
-
+    
     List<ReadStatusDto> readStatuses = List.of(
         new ReadStatusDto(UUID.randomUUID(), userId, channelId1, now.minusSeconds(60)),
         new ReadStatusDto(UUID.randomUUID(), userId, channelId2, now)
@@ -169,4 +174,4 @@ class ReadStatusControllerTest {
         .andExpect(jsonPath("$[1].userId").value(userId.toString()))
         .andExpect(jsonPath("$[1].channelId").value(channelId2.toString()));
   }
-}
+} 

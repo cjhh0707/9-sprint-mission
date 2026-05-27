@@ -1,11 +1,12 @@
 package com.sprint.mission.discodeit.exception;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -39,26 +40,37 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
     log.error("요청 유효성 검사 실패: {}", ex.getMessage());
-
-    List<ExceptionDetail> validationErrors = new ArrayList<>();
+    
+    Map<String, Object> validationErrors = new HashMap<>();
     ex.getBindingResult().getAllErrors().forEach(error -> {
       String fieldName = ((FieldError) error).getField();
       String errorMessage = error.getDefaultMessage();
-      validationErrors.add(ExceptionDetail.of(fieldName, errorMessage));
+      validationErrors.put(fieldName, errorMessage);
     });
-
+    
     ErrorResponse response = new ErrorResponse(
-        Instant.now(),
+        Instant.now(), 
         "VALIDATION_ERROR",
         "요청 데이터 유효성 검사에 실패했습니다",
         validationErrors,
         ex.getClass().getSimpleName(),
         HttpStatus.BAD_REQUEST.value()
     );
-
+    
     return ResponseEntity
         .status(HttpStatus.BAD_REQUEST)
         .body(response);
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
+    log.error("접근 권한 없음: {}", ex.getMessage());
+    ErrorResponse response = new ErrorResponse(
+        Instant.now(), "FORBIDDEN", ex.getMessage(),
+        new HashMap<>(), ex.getClass().getSimpleName(),
+        HttpStatus.FORBIDDEN.value()
+    );
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
   }
 
   private HttpStatus determineHttpStatus(DiscodeitException exception) {
@@ -66,8 +78,7 @@ public class GlobalExceptionHandler {
     return switch (errorCode) {
       case USER_NOT_FOUND, CHANNEL_NOT_FOUND, MESSAGE_NOT_FOUND, BINARY_CONTENT_NOT_FOUND,
            READ_STATUS_NOT_FOUND, USER_STATUS_NOT_FOUND -> HttpStatus.NOT_FOUND;
-      case DUPLICATE_USER, DUPLICATE_EMAIL, DUPLICATE_USERNAME,
-           DUPLICATE_READ_STATUS, DUPLICATE_USER_STATUS,
+      case DUPLICATE_USER, DUPLICATE_READ_STATUS, DUPLICATE_USER_STATUS,
            BINARY_CONTENT_DUPLICATE -> HttpStatus.CONFLICT;
       case INVALID_USER_CREDENTIALS, INVALID_PASSWORD -> HttpStatus.UNAUTHORIZED;
       case PRIVATE_CHANNEL_UPDATE, INVALID_REQUEST -> HttpStatus.BAD_REQUEST;
