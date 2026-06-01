@@ -58,9 +58,14 @@ discodeit:
       bucket: ${AWS_S3_BUCKET}
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600} # (기본값: 10분)
   admin:
-    username: ${DISCODEIT_ADMIN_USERNAME}
-    email: ${DISCODEIT_ADMIN_EMAIL}
-    password: ${DISCODEIT_ADMIN_PASSWORD}
+    username: ${DISCODEIT_ADMIN_USERNAME:admin}
+    email: ${DISCODEIT_ADMIN_EMAIL:admin@discodeit.com}
+    password: ${DISCODEIT_ADMIN_PASSWORD:admin1234!}
+  jwt:
+    secret: discodeit-jwt-secret-key-must-be-at-least-32-characters-long!
+    access-token-expiration: 1800000    # 30분 (ms)
+    refresh-token-expiration: 604800000 # 7일 (ms)
+    max-active-count: 1
 
 logging:
   level:
