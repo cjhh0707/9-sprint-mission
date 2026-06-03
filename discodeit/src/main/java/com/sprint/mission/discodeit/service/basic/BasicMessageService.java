@@ -111,6 +111,7 @@ public class BasicMessageService implements MessageService {
     return pageResponseMapper.fromSlice(slice, nextCursor);
   }
 
+  @PreAuthorize("principal.userDto.id == @basicMessageService.find(#messageId).author.id")
   @Transactional
   @Override
   @PreAuthorize("hasRole('ADMIN') or @messageSecurityService.isAuthor(#messageId, authentication.principal.userDto.id)")
@@ -124,6 +125,7 @@ public class BasicMessageService implements MessageService {
     return messageMapper.toDto(message);
   }
 
+  @PreAuthorize("principal.userDto.id == @basicMessageService.find(#messageId).author.id")
   @Transactional
   @Override
   @PreAuthorize("hasRole('ADMIN') or @messageSecurityService.isAuthor(#messageId, authentication.principal.userDto.id)")

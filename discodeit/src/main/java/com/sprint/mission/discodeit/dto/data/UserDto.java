@@ -10,4 +10,6 @@ public record UserDto(
     BinaryContentDto profile,
     Boolean online,
     Role role
-) {}
+) {
+
+}
