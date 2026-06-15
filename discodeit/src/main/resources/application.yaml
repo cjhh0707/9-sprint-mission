@@ -55,7 +55,7 @@ management:
   observations:
     annotations:
       enabled: true
-      
+
 
 info:
   name: Discodeit

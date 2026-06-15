@@ -49,4 +49,4 @@ public interface AuthApi {
       @Parameter(description = "리프레시 토큰") String refreshToken,
       @Parameter(hidden = true) HttpServletResponse response
   );
-} 
+}
