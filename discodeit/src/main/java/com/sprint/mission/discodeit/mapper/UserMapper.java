@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class UserMapper {
 
   @Autowired
-  protected JwtRegistry jwtRegistry;  // SessionManager → JwtRegistry
+  protected JwtRegistry jwtRegistry;
 
   @Mapping(target = "online", expression = "java(jwtRegistry.hasActiveJwtInformationByUserId(user.getId()))")
   public abstract UserDto toDto(User user);

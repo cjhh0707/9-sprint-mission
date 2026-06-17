@@ -1,6 +1,11 @@
 package com.sprint.mission.discodeit.storage.s3;
 
+import com.sprint.mission.discodeit.component.AdminNotifier;
+import com.sprint.mission.discodeit.config.MDCLoggingInterceptor;
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
+import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -8,11 +13,16 @@ import java.time.Duration;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -35,6 +45,9 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
   private final String secretKey;
   private final String region;
   private final String bucket;
+  private final BinaryContentRepository binaryContentRepository;
+  private final AdminNotifier adminNotifier;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Value("${discodeit.storage.s3.presigned-url-expiration:600}") // 기본값 10분
   private long presignedUrlExpirationSeconds;
@@ -43,14 +56,25 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
       @Value("${discodeit.storage.s3.access-key}") String accessKey,
       @Value("${discodeit.storage.s3.secret-key}") String secretKey,
       @Value("${discodeit.storage.s3.region}") String region,
-      @Value("${discodeit.storage.s3.bucket}") String bucket
+      @Value("${discodeit.storage.s3.bucket}") String bucket,
+      BinaryContentRepository binaryContentRepository,
+      AdminNotifier adminNotifier,
+      ApplicationEventPublisher eventPublisher
   ) {
     this.accessKey = accessKey;
     this.secretKey = secretKey;
     this.region = region;
     this.bucket = bucket;
+    this.binaryContentRepository = binaryContentRepository;
+    this.adminNotifier = adminNotifier;
+    this.eventPublisher = eventPublisher;
   }
 
+  @Retryable(
+      retryFor = RuntimeException.class,
+      maxAttempts = 3,
+      backoff = @Backoff(delay = 1000, multiplier = 2)
+  )
   @Override
   public UUID put(UUID binaryContentId, byte[] bytes) {
     String key = binaryContentId.toString();
@@ -118,6 +142,28 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
       log.error("Presigned URL 생성 실패: {}", e.getMessage());
       throw new RuntimeException("Presigned URL 생성 실패", e);
     }
+  }
+
+  @Recover
+  public UUID recover(RuntimeException e, UUID binaryContentId, byte[] bytes) {
+    String requestId = MDC.get(MDCLoggingInterceptor.REQUEST_ID);
+
+    log.error("S3 파일 업로드 최종 실패 - RequestId: {}, BinaryContentId: {}, Error: {}",
+        requestId, binaryContentId, e.getMessage());
+
+    String title = "[업로드 실패] BinaryContent 저장 실패";
+    String content = String.format(
+        "RequestId: %s\nBinaryContentId: %s\nError: %s",
+        requestId, binaryContentId, e.getMessage()
+    );
+    adminNotifier.notifyAdmin(title, content);
+
+    eventPublisher.publishEvent(new S3UploadFailedEvent(binaryContentId));
+
+    binaryContentRepository.findById(binaryContentId)
+        .ifPresent(BinaryContent::fail);
+
+    return binaryContentId;
   }
 
   private String generatePresignedUrl(String key, String contentType) {
