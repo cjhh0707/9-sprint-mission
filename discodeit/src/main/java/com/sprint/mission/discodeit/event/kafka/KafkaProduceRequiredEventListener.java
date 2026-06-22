@@ -18,12 +18,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-/**
- * 분산 환경에서 로컬 ApplicationEvent만으로는 메시지를 생성/발생시킨 인스턴스에서만
- * 처리가 끝나버린다. 웹소켓 구독자나 SSE 연결을 보유한 인스턴스가 다를 수 있으므로,
- * 실시간 푸시가 필요한 이벤트를 Kafka로 발행해 모든 인스턴스에 전파한다.
- * (수신 측은 event.kafka.WebSocketRequiredEventListener, SseRequiredTopicListener 참고)
- */
 @Slf4j
 @RequiredArgsConstructor
 @Component

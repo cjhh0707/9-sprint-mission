@@ -99,9 +99,6 @@ discodeit:
       secret: ${JWT_REFRESH_SECRET:your-refresh-token-secret-key-here-make-it-different-and-long}
       expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000} # 7 days
   kafka:
-    # 인스턴스(JVM)마다 부팅 시 1회 랜덤 생성되는 컨슈머 그룹 ID.
-    # 웹소켓/SSE 팬아웃 토픽은 모든 인스턴스가 각자 전체 메시지를 받아야 하므로
-    # 인스턴스별로 서로 다른 그룹을 사용해 동일 토픽을 중복 구독한다.
     instance-group-id: ${random.uuid}
 
 logging:

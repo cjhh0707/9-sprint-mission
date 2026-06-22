@@ -25,3 +25,9 @@ management:
   info:
     env:
       enabled: true
+
+discodeit:
+  admin:
+    username: admin
+    email: admin@discodeit.com
+    password: Admin1234!
